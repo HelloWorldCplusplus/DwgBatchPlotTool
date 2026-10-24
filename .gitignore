@@ -1,0 +1,25 @@
+# 构建产物
+bin/
+obj/
+*.pdb
+*.cache
+
+# Visual Studio / Rider / VS Code
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+*.DotSettings.user
+
+# 测试与临时
+TestResults/
+*.log
+*.tmp
+output/
+
+# 自检程序只在本地保留 (依赖本机样例图纸), 不随仓库发布
+tests/
+
+# 运行时生成 (与 exe 同目录, 正常在 bin/ 里; 万一放到别处也别提交)
+settings.ini

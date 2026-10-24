@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- ODA/Teigha 4.02 PDF 出图引擎 (控制台程序)。
+       源码取自 ODA 官方 ODADrawingTools 示例的 cs 版本，改为 SDK 风格工程以便用 dotnet build / MSBuild 构建。
+       输出直接落在 ..\..\ODA\：引擎 exe 必须与 TD_Mgd_4.02_11.dll 等原生/托管运行库同目录，
+       否则 ODA 运行时装载不到原生模块。 -->
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net48</TargetFramework>
+    <PlatformTarget>x64</PlatformTarget>
+    <AssemblyName>ODADrawingTools</AssemblyName>
+    <RootNamespace>ODADrawingTools</RootNamespace>
+    <Authors>唐明龙</Authors>
+    <Copyright>Copyright © 2026 唐明龙 (QQ 979123550)</Copyright>
+    <LangVersion>latest</LangVersion>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+    <OutputPath>..\..\ODA\</OutputPath>
+    <DebugType>pdbonly</DebugType>
+    <Optimize Condition=" '$(Configuration)' == 'Release' ">true</Optimize>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Teigha 4.02 托管程序集 (x64)。Private=false：运行库已随 ODA\ 部署，不重复拷贝。 -->
+    <Reference Include="TD_Mgd_4.02_11">
+      <HintPath>..\..\ODA\TD_Mgd_4.02_11.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Data" />
+  </ItemGroup>
+
+</Project>

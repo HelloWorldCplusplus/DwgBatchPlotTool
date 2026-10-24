@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="__THEME__">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DWG/DXF 批量转 PDF</title>
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+
+  <header id="toolbar">
+    <div class="tb-group">
+      <button id="btnAddFiles" class="btn" title="添加一个或多个 dwg / dxf 文件">
+        <svg viewBox="0 0 24 24" class="ico"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>添加文件</button>
+      <button id="btnAddFolder" class="btn" title="添加整个文件夹（含子目录）">
+        <svg viewBox="0 0 24 24" class="ico"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg>添加文件夹</button>
+      <button id="btnRemove" class="btn" title="从列表移除选中的文件">
+        <svg viewBox="0 0 24 24" class="ico"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>移除所选</button>
+      <button id="btnClear" class="btn" title="清空文件列表">
+        <svg viewBox="0 0 24 24" class="ico"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>清空列表</button>
+    </div>
+    <span class="tb-sep"></span>
+    <div class="tb-group">
+      <button id="btnStart" class="btn btn-primary" title="开始批量转换">
+        <svg viewBox="0 0 24 24" class="ico"><polygon points="5 3 19 12 5 21 5 3"/></svg>开始转换</button>
+      <button id="btnStop" class="btn" title="停止当前批次">
+        <svg viewBox="0 0 24 24" class="ico"><rect x="5" y="5" width="14" height="14" rx="2"/></svg>停止</button>
+    </div>
+    <span class="grow"></span>
+    <button id="btnHelp" class="btn" title="程序使用帮助">
+      <svg viewBox="0 0 24 24" class="ico"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>帮助</button>
+    <button id="btnOpenOut" class="btn" title="在资源管理器里打开输出目录">
+      <svg viewBox="0 0 24 24" class="ico"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>输出目录</button>
+  </header>
+
+  <main>
+    <section id="listPane">
+      <div id="fileWrap">
+        <table id="files">
+          <thead>
+            <tr><th class="c1">文件</th><th class="c2">目录</th><th class="c3">大小</th><th class="c4">状态</th><th class="c5">耗时</th><th class="c6">输出</th><th class="c7">参照名</th><th class="c7b">比例</th><th class="c8">转换</th><th class="c9"></th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+        <div id="emptyHint">
+          <svg viewBox="0 0 24 24" class="empty-ico"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="12" y1="10" x2="12" y2="16"/></svg>
+          <div class="empty-title">还没有待转换的图纸</div>
+          <div class="empty-sub">点左上角「添加文件 / 添加文件夹」，支持 .dwg 与 .dxf</div>
+        </div>
+      </div>
+      <div id="logPane">
+        <div class="pane-head"><span>运行日志</span><span id="logCount" class="muted"></span></div>
+        <div id="log"></div>
+      </div>
+    </section>
+
+    <section id="optPane">
+
+      <div class="group">
+        <div class="gtitle">基本</div>
+        <div class="row">
+          <label class="g1">全局参照名</label>
+          <input id="refName" list="refList" class="g2" value="图框" placeholder="留空 = 整张图">
+          <button id="btnRefList" class="btn btn-mini g3" title="列出图纸里的块参照（参照名 / 图纸 / 实例数 / 空间 / 尺寸）">明细…</button>
+        </div>
+        <div class="row-hint">
+          <span id="refHint">加入图纸后自动识别参照名</span>
+          <button id="btnRescan" class="btn btn-mini" title="重新扫描已加入图纸里的块参照">重新识别</button>
+        </div>
+        <div id="refPanel" class="hidden">
+          <div class="row"><label class="g1">过滤</label><input id="refFilter" class="g2" placeholder="按名字过滤"></div>
+          <table id="refTable"><thead><tr><th>参照名</th><th>所在图纸</th><th>实例数</th><th>空间</th><th>尺寸</th></tr></thead><tbody></tbody></table>
+        </div>
+        <div class="row">
+          <label class="g1">打印范围</label>
+          <select id="space" class="g2"><option value="0">仅模型空间</option><option value="1">仅布局空间</option><option value="2">全部</option></select>
+        </div>
+        <div class="row">
+          <label class="g1" title="一张图纸里有多张图框时，各张图框的打印先后">多图框排序规则</label>
+          <select id="frameOrder" class="g2"><option value="xrightydown">先左→右，再上→下</option><option value="xrightyup">先左→右，再下→上</option><option value="ydownxright">先上→下，再左→右</option><option value="yupxright">先下→上，再左→右</option></select>
+        </div>
+        <div class="row">
+          <label class="g1">纸张</label>
+          <select id="paper" class="g2"><option value="0">按图框(A3)</option><option value="1">A4</option><option value="2">A3</option><option value="3">A2</option><option value="4">A1</option><option value="5">A0</option><option value="6">自定义</option></select>
+        </div>
+        <div class="row hidden" id="customPaperRow">
+          <label class="g1">自定义纸张</label>
+          <div class="g2 paper-box"><input id="customW" type="number" step="1" title="宽 mm"><span class="x">×</span><input id="customH" type="number" step="1" title="高 mm"><span class="hint">mm</span></div>
+        </div>
+        <div class="row">
+          <label class="g1">纸张方向</label>
+          <select id="orientation" class="g2"><option value="0">横向</option><option value="1">纵向</option></select>
+        </div>
+        <div class="row">
+          <label class="g1">全局缩放比例</label>
+          <input id="scale" class="g2" placeholder="如 1:100 或 100，留空 = 按图框">
+        </div>
+        <div class="row">
+          <label class="g1">超时(秒)</label>
+          <input id="timeout" type="number" min="10" step="10" class="g2">
+          <span class="hint g3" style="text-align:right">单个文件超过则终止</span>
+        </div>
+        <div class="row">
+          <label class="g1" title="非系统字体(方正/华文/THFont 等)所在文件夹, 缺了会掉字或乱码">字体目录</label>
+          <input id="fontsDir" class="g2" placeholder="程序目录下的 Fonts">
+          <button id="btnFontsDir" class="btn btn-mini g3">浏览…</button>
+        </div>
+        <datalist id="refList"></datalist>
+      </div>
+
+      <div class="group">
+        <div class="gtitle">图纸位置</div>
+        <div class="row"><label class="chk g2"><input type="checkbox" id="center"> 居中打印</label></div>
+        <div class="row"><label class="chk g2"><input type="checkbox" id="fit"> 布满图纸</label></div>
+        <div class="row"><label class="chk g2"><input type="checkbox" id="hidden"> 打印消隐图层</label></div>
+        <div class="row">
+          <label class="g1">偏移 X</label>
+          <input id="offsetX" type="number" step="0.1" class="g2">
+        </div>
+        <div class="row">
+          <label class="g1">偏移 Y</label>
+          <input id="offsetY" type="number" step="0.1" class="g2">
+        </div>
+      </div>
+
+      <div class="group">
+        <div class="gtitle">打印样式</div>
+        <div class="row"><label class="chk g2"><input type="checkbox" id="mono"> 单色打印</label></div>
+        <div class="row"><label class="chk g2"><input type="checkbox" id="plotstyles" checked> 按样式打印</label></div>
+        <div class="row">
+          <label class="g1">线宽处理</label>
+          <select id="lineweight" class="g2"><option value="0">按图纸</option><option value="1">按比例</option><option value="2">不打印</option></select>
+        </div>
+        <div class="row">
+          <label class="g1">打印样式(CTB文件)</label>
+          <input id="ctb" class="g2">
+          <button id="btnCtb" class="btn btn-mini g3">浏览…</button>
+        </div>
+      </div>
+
+      <div class="group">
+        <div class="gtitle">输出</div>
+        <div class="row"><label class="chk g2"><input type="radio" name="mode" value="0" checked> 各文件独立的PDF</label></div>
+        <div class="row"><label class="chk g2"><input type="radio" name="mode" value="1"> 合并为一个PDF</label></div>
+        <div class="row">
+          <label class="g1">合并PDF名</label>
+          <input id="mergedName" class="g2">
+        </div>
+        <div class="row">
+          <label class="g1">PDF输出目录</label>
+          <input id="outputDir" class="g2">
+          <button id="btnOutDir" class="btn btn-mini g3">浏览…</button>
+        </div>
+      </div>
+
+    </section>
+  </main>
+
+  <footer id="statusbar">
+    <div id="progress"><div id="bar"></div></div>
+    <div class="sb-row">
+      <span id="statusDot" class="dot"></span>
+      <span id="status">就绪</span>
+      <span class="grow"></span>
+      <span id="statCounts" class="sb-item"></span>
+      <span class="sb-sep"></span>
+      <span id="engineInfo" class="sb-item engine"></span>
+      <span class="sb-sep"></span>
+      <button id="btnTheme" class="sb-btn" title="切换深浅色主题">☾ 暗色</button>
+    </div>
+  </footer>
+
+  <div id="helpModal" class="modal hidden">
+    <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+      <div class="modal-head">
+        <span id="helpTitle">使用帮助</span>
+        <button id="btnHelpClose" class="modal-x" title="关闭">✕</button>
+      </div>
+      <div class="modal-body" id="helpBody"></div>
+      <div class="modal-foot">
+        <button id="btnHelpOk" class="btn btn-primary">知道了</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+<script src="app.js"></script>
+</body>
+</html>

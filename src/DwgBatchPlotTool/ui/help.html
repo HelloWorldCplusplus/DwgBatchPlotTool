@@ -1,0 +1,346 @@
+<div class="help-doc">
+
+  <h2>工具概览</h2>
+  <p class="help-lead">DWG/DXF 批量转 PDF — 基于 ODA/Teigha 引擎。下面按「界面长什么样 → 怎么用 → 参数什么意思 → 出问题怎么办」组织。</p>
+
+  <figure class="help-fig">
+    <svg viewBox="0 0 1000 470" role="img" aria-label="界面总览示意图">
+      <rect x="8" y="8" width="984" height="454" rx="9" fill="var(--panel)" stroke="var(--border)"/>
+      <!-- 顶栏 -->
+      <rect x="8" y="8" width="984" height="38" rx="9" fill="var(--panel-alt)"/>
+      <rect x="8" y="30" width="984" height="16" fill="var(--panel-alt)"/>
+      <line x1="8" y1="46" x2="992" y2="46" stroke="var(--border)"/>
+      <g font-size="13" fill="var(--text)" text-anchor="middle">
+        <rect x="40" y="18" width="66" height="19" rx="4" fill="var(--panel)" stroke="var(--border)"/>
+        <text x="73" y="32">添加文件</text>
+        <rect x="112" y="18" width="70" height="19" rx="4" fill="var(--panel)" stroke="var(--border)"/>
+        <text x="147" y="32">添加文件夹</text>
+        <rect x="188" y="18" width="62" height="19" rx="4" fill="var(--panel)" stroke="var(--border)"/>
+        <text x="219" y="32">移除所选</text>
+        <rect x="256" y="18" width="62" height="19" rx="4" fill="var(--panel)" stroke="var(--border)"/>
+        <text x="287" y="32">清空列表</text>
+        <rect x="334" y="18" width="66" height="19" rx="4" fill="var(--accent)" stroke="none"/>
+        <text x="367" y="32" fill="var(--accent-fg)">开始转换</text>
+        <rect x="406" y="18" width="44" height="19" rx="4" fill="var(--panel)" stroke="var(--border)"/>
+        <text x="428" y="32">停止</text>
+        <rect x="812" y="18" width="46" height="19" rx="4" fill="var(--panel)" stroke="var(--border)"/>
+        <text x="835" y="32">帮助</text>
+        <rect x="864" y="18" width="58" height="19" rx="4" fill="var(--panel)" stroke="var(--border)"/>
+        <text x="893" y="32">输出目录</text>
+        <rect x="928" y="18" width="56" height="19" rx="4" fill="var(--panel)" stroke="var(--border)"/>
+        <text x="956" y="32" fill="var(--err)">关闭</text>
+      </g>
+
+      <!-- 文件列表 -->
+      <rect x="22" y="60" width="586" height="248" rx="5" fill="var(--panel)" stroke="var(--border)"/>
+      <rect x="22" y="60" width="586" height="24" fill="var(--panel-alt)"/>
+      <line x1="22" y1="84" x2="608" y2="84" stroke="var(--border)"/>
+      <g font-size="13" fill="var(--text)">
+        <text x="36" y="77">文件</text><text x="180" y="77">目录</text><text x="306" y="77">大小</text>
+        <text x="368" y="77">状态</text><text x="480" y="77">耗时</text><text x="536" y="77">输出</text>
+      </g>
+      <g font-size="12.5" fill="var(--muted)">
+        <text x="36" y="108">总图.dxf</text>
+        <text x="180" y="108" fill="var(--text)">D:\图纸\布置图</text>
+        <text x="306" y="108">1.2 MB</text>
+        <rect x="366" y="94" width="96" height="19" rx="9" fill="var(--ok-bg)"/>
+        <text x="376" y="108" fill="var(--ok)">成功 (42 页)</text>
+        <text x="480" y="108">604 ms</text>
+        <text x="536" y="108" fill="var(--accent)">总图.pdf</text>
+        <line x1="22" y1="122" x2="608" y2="122" stroke="var(--border-soft)"/>
+        <text x="36" y="140">平面图.dwg</text>
+        <text x="180" y="140" fill="var(--text)">D:\图纸\构造图</text>
+        <text x="306" y="140">840 KB</text>
+        <rect x="366" y="126" width="72" height="19" rx="9" fill="var(--ok-bg)"/>
+        <text x="376" y="140" fill="var(--ok)">成功 (2 页)</text>
+        <text x="480" y="140">311 ms</text>
+        <text x="536" y="140" fill="var(--accent)">平面图.pdf</text>
+        <line x1="22" y1="154" x2="608" y2="154" stroke="var(--border-soft)"/>
+        <text x="36" y="172">详图.dwg</text>
+        <text x="180" y="172" fill="var(--text)">D:\图纸\详图</text>
+        <text x="306" y="172">9.8 MB</text>
+        <rect x="366" y="158" width="108" height="19" rx="9" fill="var(--err-bg)"/>
+        <text x="376" y="172" fill="var(--err)">失败: 超时</text>
+        <text x="480" y="172">—</text>
+        <text x="536" y="172" fill="var(--muted)">—</text>
+        <line x1="22" y1="186" x2="608" y2="186" stroke="var(--border-soft)"/>
+      </g>
+      <g font-size="12.5" fill="var(--muted)">
+        <text x="36" y="212">…</text>
+      </g>
+
+      <!-- 运行日志 -->
+      <rect x="22" y="316" width="586" height="88" rx="5" fill="var(--panel)" stroke="var(--border)"/>
+      <rect x="22" y="316" width="586" height="22" fill="var(--panel-alt)"/>
+      <line x1="22" y1="338" x2="608" y2="338" stroke="var(--border)"/>
+      <text x="34" y="332" font-size="12.5" fill="var(--text)">运行日志</text>
+      <g font-size="12" fill="var(--muted)">
+        <text x="34" y="360">12:04:31 开始转换 (1 个文件)</text>
+        <text x="34" y="378">12:04:32 总图.dxf → 成功 (42 页, 604 ms)</text>
+        <text x="34" y="396" fill="var(--err)">12:04:33 详图.dwg → 失败: 超过 300 秒</text>
+      </g>
+
+      <!-- 参数区 -->
+      <rect x="640" y="60" width="338" height="344" rx="5" fill="var(--panel)" stroke="var(--border)"/>
+      <g font-size="13">
+        <text x="652" y="80" fill="var(--text)" font-weight="700">基本</text>
+        <line x1="652" y1="86" x2="966" y2="86" stroke="var(--border-soft)"/>
+      </g>
+      <g font-size="12.5" fill="var(--text)">
+        <text x="652" y="108">全局参照名</text>
+        <rect x="726" y="94" width="176" height="19" rx="4" fill="var(--panel)" stroke="var(--border)"/>
+        <text x="734" y="108" fill="var(--muted)">图框</text>
+        <rect x="908" y="94" width="42" height="19" rx="4" fill="var(--panel)" stroke="var(--border)"/>
+        <text x="929" y="108" text-anchor="middle">明细…</text>
+        <text x="652" y="136">空间</text>
+        <rect x="726" y="122" width="224" height="19" rx="4" fill="var(--panel)" stroke="var(--border)"/>
+        <text x="734" y="136" fill="var(--muted)">全部</text>
+        <text x="652" y="164">纸张</text>
+        <rect x="726" y="150" width="224" height="19" rx="4" fill="var(--panel)" stroke="var(--border)"/>
+        <text x="734" y="164" fill="var(--muted)">A3</text>
+        <text x="652" y="192">比例</text>
+        <rect x="726" y="178" width="224" height="19" rx="4" fill="var(--panel)" stroke="var(--border)"/>
+        <text x="734" y="192" fill="var(--muted)">留空 = 按图框</text>
+      </g>
+      <g font-size="13">
+        <text x="652" y="230" fill="var(--text)" font-weight="700">图纸位置</text>
+        <line x1="652" y1="236" x2="966" y2="236" stroke="var(--border-soft)"/>
+        <text x="652" y="258" fill="var(--text)">居中打印</text>
+        <text x="652" y="278" fill="var(--text)">布满图纸</text>
+        <text x="652" y="232" fill="none"> </text>
+      </g>
+      <g font-size="13">
+        <text x="652" y="312" fill="var(--text)" font-weight="700">打印样式</text>
+        <line x1="652" y1="318" x2="966" y2="318" stroke="var(--border-soft)"/>
+        <text x="652" y="340" fill="var(--text)">单色打印</text>
+        <text x="652" y="360" fill="var(--text)">按样式打印</text>
+        <text x="652" y="384" fill="var(--text)">CTB文件</text>
+        <rect x="726" y="370" width="176" height="19" rx="4" fill="var(--panel)" stroke="var(--border)"/>
+        <text x="734" y="384" fill="var(--muted)">PlotStyles\monochrome.ctb</text>
+      </g>
+
+      <!-- 状态栏 -->
+      <rect x="8" y="418" width="984" height="44" fill="var(--panel-alt)"/>
+      <line x1="8" y1="418" x2="992" y2="418" stroke="var(--border)"/>
+      <circle cx="36" cy="440" r="5" fill="var(--ok)"/>
+      <text x="50" y="445" font-size="13" fill="var(--text)">完成: 成功 2, 失败 1, 共 44 页</text>
+      <text x="640" y="445" font-size="12.5" fill="var(--muted)">引擎: E:\DwgBatchPlotTool\ODA\ODADrawingTools.exe</text>
+
+      <!-- 编号标记 -->
+      <g font-size="12" text-anchor="middle" fill="#fff">
+        <circle cx="316" cy="14" r="9" fill="var(--accent)"/><text x="316" y="18">1</text>
+        <circle cx="624" cy="72" r="9" fill="var(--accent)"/><text x="624" y="76">2</text>
+        <circle cx="968" cy="72" r="9" fill="var(--accent)"/><text x="968" y="76">3</text>
+        <circle cx="598" cy="322" r="9" fill="var(--accent)"/><text x="598" y="326">4</text>
+        <circle cx="26" cy="434" r="9" fill="var(--accent)"/><text x="26" y="438">5</text>
+        <circle cx="800" cy="14" r="9" fill="var(--accent)"/><text x="800" y="18">6</text>
+      </g>
+    </svg>
+    <figcaption class="help-cap">界面总览：顶栏 / 文件列表 / 参数区 / 运行日志 / 状态栏</figcaption>
+  </figure>
+
+  <ol class="help-legend">
+    <li><b>顶栏</b> — 加文件、开始转换、停止、帮助、输出目录、关闭</li>
+    <li><b>文件列表</b> — 转换勾选、单个文件的参照名/比例、输出路径、耗时</li>
+    <li><b>参数区</b> — 参照名、空间、纸张、比例、样式、输出</li>
+    <li><b>运行日志</b> — 每一步都记在这里，失败原因也在这</li>
+    <li><b>状态栏</b> — 总进度、成功/失败数、总页数、引擎路径</li>
+    <li><b>帮助</b> — 任何时候点开都能找到答案</li>
+  </ol>
+
+  <h2>快速上手</h2>
+  <ol class="help-steps">
+    <li><b>添加文件 / 添加文件夹</b> —— 弹的是系统原生对话框，列表只接受 <code>.dwg</code> 和 <code>.dxf</code>。</li>
+    <li><b>右侧设参数</b> —— 参照名、纸张、比例、样式等，改一下就自动记进 <code>settings.ini</code>，下次打开还在。</li>
+    <li><b>开始转换</b> —— 进度条和底部日志实时显示每个文件的结果；旁边的「停止」可中断。</li>
+    <li><b>取结果</b> —— 列表「输出」列点一下就打开 PDF；工具栏「输出目录」直接开文件夹。</li>
+  </ol>
+
+  <h2>工作流程</h2>
+  <figure class="help-fig">
+    <svg viewBox="0 0 1000 150" role="img" aria-label="转换流程示意图">
+      <g font-size="13" text-anchor="middle">
+        <rect x="8" y="34" width="164" height="60" rx="6" fill="var(--panel-alt)" stroke="var(--border)"/>
+        <text x="90" y="60" fill="var(--text)">① 添加文件/文件夹</text>
+        <text x="90" y="80" fill="var(--muted)">.dwg / .dxf</text>
+
+        <rect x="204" y="34" width="164" height="60" rx="6" fill="var(--panel-alt)" stroke="var(--border)"/>
+        <text x="286" y="60" fill="var(--text)">② 后台识别参照名</text>
+        <text x="286" y="80" fill="var(--muted)">填进下拉框</text>
+
+        <rect x="400" y="34" width="164" height="60" rx="6" fill="var(--panel-alt)" stroke="var(--border)"/>
+        <text x="482" y="60" fill="var(--text)">③ 开始转换</text>
+        <text x="482" y="80" fill="var(--muted)">逐个文件出图</text>
+
+        <rect x="596" y="34" width="164" height="60" rx="6" fill="var(--panel-alt)" stroke="var(--border)"/>
+        <text x="678" y="60" fill="var(--text)">④ 引擎子进程</text>
+        <text x="678" y="80" fill="var(--muted)">ODA 出图，坏文件只杀子进程</text>
+
+        <rect x="792" y="34" width="200" height="60" rx="6" fill="var(--panel-alt)" stroke="var(--border)"/>
+        <text x="892" y="60" fill="var(--text)">⑤ 输出 PDF</text>
+        <text x="892" y="80" fill="var(--muted)">每文件一个 / 合并为一个</text>
+
+        <g stroke="var(--muted)" fill="var(--muted)">
+          <line x1="174" y1="64" x2="198" y2="64"/><polygon points="198,64 190,59 190,69"/>
+          <line x1="370" y1="64" x2="394" y2="64"/><polygon points="394,64 386,59 386,69"/>
+          <line x1="566" y1="64" x2="590" y2="64"/><polygon points="590,64 582,59 582,69"/>
+          <line x1="762" y1="64" x2="786" y2="64"/><polygon points="786,64 778,59 778,69"/>
+        </g>
+      </g>
+    </svg>
+    <figcaption class="help-cap">从加文件到出 PDF 的五个步骤</figcaption>
+  </figure>
+
+  <h2>文件列表</h2>
+  <table class="help-tab">
+    <tr><th>列</th><th>作用</th></tr>
+    <tr><td>转换</td><td>勾选框，决定这个文件是否参与本次转换（加入时默认全勾上）。只影响本次，不改文件本身。</td></tr>
+    <tr><td>参照名</td><td>给单个文件指定参照名；留空（显示「用全局」）就用右边的「全局参照名」。</td></tr>
+    <tr><td>比例</td><td>给单个文件指定打印比例（格式同右边的「比例」）；留空（显示「用全局」）就用全局比例。</td></tr>
+    <tr><td>状态</td><td>转换后显示「成功 (N 页)」或失败原因。</td></tr>
+    <tr><td>输出</td><td>转换完成后显示 PDF 路径，点一下直接打开。</td></tr>
+    <tr><td>✕</td><td>把这行从列表里去掉（不删磁盘文件）。</td></tr>
+  </table>
+  <p>点行选中，<kbd>Ctrl</kbd>+点可多选，<kbd>Esc</kbd> 取消选择。选中行后再点参照名明细里的一行，会直接填到那一行。</p>
+
+  <h2>按参照图框分页打印</h2>
+  <p>「参照名」= 图纸里放图框的<b>块名</b>或<b>外部参照名</b>。填上之后，引擎把每个命中的图框单独出一页：</p>
+  <figure class="help-fig">
+    <svg viewBox="0 0 1000 250" role="img" aria-label="参照图框分页打印示意图">
+      <text x="16" y="26" font-size="13" fill="var(--text)" font-weight="700">图纸</text>
+      <rect x="16" y="38" width="420" height="196" rx="5" fill="var(--panel-alt)" stroke="var(--border)"/>
+      <g font-size="12.5" text-anchor="middle">
+        <rect x="46" y="66" width="140" height="70" rx="3" fill="var(--panel)" stroke="var(--accent)"/>
+        <text x="116" y="96" fill="var(--text)">图框 A</text>
+        <text x="116" y="116" fill="var(--muted)">块参照_1</text>
+        <rect x="266" y="66" width="140" height="70" rx="3" fill="var(--panel)" stroke="var(--accent)"/>
+        <text x="336" y="96" fill="var(--text)">图框 B</text>
+        <text x="336" y="116" fill="var(--muted)">块参照_2</text>
+        <rect x="46" y="156" width="140" height="58" rx="3" fill="var(--panel)" stroke="var(--accent)"/>
+        <text x="116" y="182" fill="var(--text)">图框 C</text>
+        <text x="116" y="200" fill="var(--muted)">块参照_3</text>
+      </g>
+      <g stroke="var(--muted)" fill="var(--muted)">
+        <line x1="446" y1="136" x2="516" y2="136" stroke-width="1.6"/>
+        <polygon points="524,136 512,130 512,142"/>
+      </g>
+      <text x="485" y="122" font-size="12.5" text-anchor="middle" fill="var(--muted)">按参照名过滤</text>
+      <text x="540" y="26" font-size="13" fill="var(--text)" font-weight="700">输出 PDF（3 页）</text>
+      <g font-size="12.5" text-anchor="middle">
+        <rect x="540" y="52" width="120" height="170" rx="3" fill="var(--panel)" stroke="var(--border)"/>
+        <text x="600" y="140" fill="var(--muted)">第 1 页</text>
+        <rect x="676" y="52" width="120" height="170" rx="3" fill="var(--panel)" stroke="var(--border)"/>
+        <text x="736" y="140" fill="var(--muted)">第 2 页</text>
+        <rect x="812" y="52" width="120" height="170" rx="3" fill="var(--panel)" stroke="var(--border)"/>
+        <text x="872" y="140" fill="var(--muted)">第 3 页</text>
+      </g>
+    </svg>
+    <figcaption class="help-cap">一个图纸里的多个图框 = 多页 PDF，每页就是一个图框的打印窗口</figcaption>
+  </figure>
+  <ul>
+    <li>引擎在模型空间和各图纸空间里找出所有名字匹配的块参照，用每个实例自己的范围（外扩 1mm）当打印窗口；</li>
+    <li>名字支持 <code>*</code> <code>?</code> 通配（例如 <code>Layout*_1</code> 一次匹配 22 个）；</li>
+    <li>留空 = 不按图框过滤，按整张图打印；</li>
+    <li>命中的图框尺寸决定纸张比例，除非你又显式指定了纸张。</li>
+    <li><b>多图框排序规则</b>决定多张图框谁先出：<code>先左→右，再上→下</code>（默认，像读书一样逐行）／
+      <code>先左→右，再下→上</code>／<code>先上→下，再左→右</code>（逐列）／<code>先下→上，再左→右</code>。
+      同一行里的图框坐标差半张图框以内都算一行，不要求摆得多整齐。</li>
+  </ul>
+  <div class="help-note tip">
+    <b>图框放在单独文件里？</b>
+    图纸常见的做法是把图框放在 <code>图框_Ref.dwg</code>、主图用<b>外部参照</b>插进来。这种图里 AutoCAD 看到的块名
+    （<code>块参照_1</code> 之类）只是自动生成的、没有意义，<b>有意义的是被参照的文件名</b>。
+    程序在明细表里给外部参照标了紫色「外部参照」标签，填那个文件名可一次命中所有引用它的实例。
+  </div>
+
+  <h2>参数速查</h2>
+  <table class="help-tab">
+    <tr><th>参数</th><th>说明</th></tr>
+    <tr><td>全局参照图框名</td><td>默认 <code>图框</code>。可编辑的下拉框：候选来自已加入图纸里的块名和外部参照文件名，也支持 <code>*</code> <code>?</code> 通配。<b>留空 = 整张图</b>（不按图框分页）。旁边的「明细…」看实例数 / 空间 / 尺寸。</td></tr>
+    <tr><td>空间</td><td>仅模型空间 / 仅布局空间 / 全部。</td></tr>
+    <tr><td>多图框排序规则</td><td>一张图纸里有多张图框时的页面顺序：先左→右再上→下（默认）／先左→右再下→上／先上→下再左→右／先下→上再左→右。</td></tr>
+    <tr><td>纸张</td><td>默认 A3。另有「按图框(A3)」= 纸张按命中的图框长宽比定；A4/A3/A2/A1/A0；自定义宽高 (mm)。</td></tr>
+    <tr><td>方向</td><td>横向 / 纵向。</td></tr>
+    <tr><td>比例</td><td>写 <code>1:100</code>、<code>1/100</code>、<code>1-100</code>，或只写分母 <code>100</code>（= 1:100）。<b>留空 = 按图框</b>（缩放到纸张大小）。格式错会直接报错，不会被悄悄忽略。</td></tr>
+    <tr><td>超时(秒)</td><td>单个文件的上限，超时后杀掉引擎子进程（默认 300 秒）。</td></tr>
+    <tr><td>字体目录</td><td>默认 <code>&lt;程序目录&gt;\Fonts</code>。方正 / 华文 / THFont 等非系统字体所在文件夹，缺了会掉字或乱码。可改成别的目录，改完立即生效。</td></tr>
+    <tr><td>居中 / 布满图纸</td><td>打印位置。</td></tr>
+    <tr><td>偏移 X / Y</td><td>打印偏移 (mm)。</td></tr>
+    <tr><td>打印消隐图层</td><td>是否打印消隐对象。</td></tr>
+    <tr><td>单色打印</td><td>所有对象按单色出图。</td></tr>
+    <tr><td>按样式打印</td><td>默认勾选，用 CTB/STB 样式表出图。</td></tr>
+    <tr><td>线宽</td><td>按图纸 / 按比例缩放 / 不打印线宽。</td></tr>
+    <tr><td>CTB文件</td><td>默认指向程序目录下的 <code>PlotStyles\monochrome.ctb</code>。</td></tr>
+    <tr><td>输出目录</td><td>默认程序目录下的 <code>output\</code>。改动后只保存你改过的值。</td></tr>
+    <tr><td>各文件独立的PDF / 合并为一个PDF</td><td>前者输出 <code>原名.pdf</code>（重名自动变 <code>原名 (2).pdf</code>）；后者先各自出图再合并成一个 PDF。</td></tr>
+    <tr><td>含子目录</td><td>添加文件夹时一律递归收集子目录里的 dwg/dxf。</td></tr>
+    <tr><td>输出目录结构</td><td>选「各文件独立的PDF」时，按源图纸相对添加时文件夹的路径在输出目录下建同样的子目录存放；单个添加的文件直接放在输出目录。「合并为一个PDF」只有一个文件，不分子目录。</td></tr>
+  </table>
+
+  <h2>纸张与方向</h2>
+  <figure class="help-fig">
+    <svg viewBox="0 0 1000 250" role="img" aria-label="纸张与方向示意图">
+      <g>
+        <text x="155" y="36" text-anchor="middle" font-size="13" fill="var(--text)">横向（默认）</text>
+        <rect x="50" y="56" width="210" height="149" rx="3" fill="var(--panel)" stroke="var(--border)"/>
+        <text x="155" y="126" text-anchor="middle" font-size="13" fill="var(--text)">420 × 297</text>
+        <text x="155" y="146" text-anchor="middle" font-size="12" fill="var(--muted)">A3</text>
+      </g>
+      <g>
+        <text x="394" y="36" text-anchor="middle" font-size="13" fill="var(--text)">纵向</text>
+        <rect x="320" y="42" width="149" height="210" rx="3" fill="var(--panel)" stroke="var(--border)"/>
+        <text x="394" y="143" text-anchor="middle" font-size="13" fill="var(--text)">297 × 420</text>
+        <text x="394" y="163" text-anchor="middle" font-size="12" fill="var(--muted)">A3</text>
+      </g>
+      <g font-size="13">
+        <text x="540" y="40" fill="var(--text)" font-weight="700">要点</text>
+        <text x="540" y="66" fill="var(--muted)">· 页面实际大小 = 布局里的规范纸张，</text>
+        <text x="540" y="86" fill="var(--muted)">  引擎会自动把布局纸张改成你选的；</text>
+        <text x="540" y="110" fill="var(--muted)">· 四周留白是打印设备自带的页边距</text>
+        <text x="540" y="130" fill="var(--muted)">  （约 7.5 / 20 mm），图框铺满可打印区；</text>
+        <text x="540" y="154" fill="var(--muted)">· 「按图框」= 不指定纸张，由图框长宽比</text>
+        <text x="540" y="174" fill="var(--muted)">  决定（长边 420mm ≈ A3）。</text>
+      </g>
+    </svg>
+    <figcaption class="help-cap">纸张规格与方向：宽高单位都是毫米</figcaption>
+  </figure>
+
+  <h2>常见问题</h2>
+  <table class="help-tab">
+    <tr><th>现象</th><th>怎么办</th></tr>
+    <tr><td>PDF 里中文变方块 / 掉字</td><td>「字体目录」指到含 SHX / TTF 字体的目录（默认 <code>&lt;程序目录&gt;\Fonts</code>）。</td></tr>
+    <tr><td>失败</td><td>失败原因写在底部「运行日志」里，状态列也会显示原因（引擎启动失败 / 超时 / 引擎异常 / 打印配置无效等）。</td></tr>
+    <tr><td>「未找到可打印内容」</td><td>参照名没匹配到任何图框。点「明细…」看实际有哪些名字，或清空参照名按整张图打印。</td></tr>
+    <tr><td>页序和图纸标注的「第 N 页」对不上</td><td>已修：出图顺序按 AutoCAD 的布局标签页顺序（TabOrder）。引擎日志里的 <code>INFO: 布局[tab=N] 名称</code> 可核对。</td></tr>
+    <tr><td>页面大小和选的纸张不一致</td><td>同批 PDF 页面大小统一；图纸里存了已不存在的打印机时，该布局沿用图纸自带的打印设置（日志有提示）。</td></tr>
+    <tr><td>下拉框里没有参照名</td><td>扫描在后台跑，先等一两秒；或点「重新识别」强制重扫。扫描失败的原因会写在日志里。</td></tr>
+    <tr><td>程序整个卡住</td><td>点工具栏「停止」中止当前批次；单个文件超时会自动杀掉引擎。</td></tr>
+  </table>
+
+  <h2>无界面 / 脚本用法</h2>
+  <p>只启动本机服务并把界面地址打到标准输出，页面接口（POST + JSON）见 <code>README.md</code>。批量实测：</p>
+  <pre>bin\DwgBatchPlotTool.exe --no-browser
+tests\Selftest\bin\Selftest.exe --batch "C:\图纸目录" "E:\输出目录" [--recursive]</pre>
+  <p>引擎（<code>ODA\ODADrawingTools.exe</code>）也能脱离界面单独用：</p>
+  <pre>ODADrawingTools.exe --plot &lt;输入.dwg&gt; &lt;输出.pdf&gt; [选项]
+ODADrawingTools.exe --plot-batch &lt;输出目录&gt; [选项] &lt;输入1&gt; &lt;输入2&gt; ...
+ODADrawingTools.exe --plot-merge &lt;输出.pdf&gt; [选项] &lt;输入1&gt; ...
+ODADrawingTools.exe --list-refs &lt;输入.dwg&gt;</pre>
+
+  <h2>环境变量</h2>
+  <table class="help-tab">
+    <tr><th>变量</th><th>作用</th></tr>
+    <tr><td><code>DWGBP_ROOT</code></td><td>指定程序目录（找 <code>ODA\</code> / <code>Fonts\</code> / <code>PlotStyles\</code> 用，默认就是 exe 所在目录）。</td></tr>
+    <tr><td><code>DWGBP_SETTINGS</code></td><td>指定设置文件路径（默认与 <code>DwgBatchPlotTool.exe</code> 同目录的 <code>settings.ini</code>）。</td></tr>
+    <tr><td><code>DWGBP_FONTS</code></td><td>引擎的字体搜索目录（界面「字体目录」填的就是它）。</td></tr>
+  </table>
+
+  <h2>支持作者</h2>
+  <p class="help-lead">程序免费开源。若对您有帮助，可打赏一杯咖啡 ☕</p>
+  <p style="text-align:center;margin:1.2em 0">
+    <img src="donate.png" alt="微信支付" style="width:260px;border-radius:8px">
+  </p>
+
+  <p class="help-lead" style="margin-top:2em;color:var(--muted)">DwgBatchPlotTool — 作者：唐明龙（QQ 979123550）</p>
+
+</div>

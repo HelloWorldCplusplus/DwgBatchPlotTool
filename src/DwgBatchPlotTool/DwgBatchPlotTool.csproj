@@ -1,0 +1,49 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net48</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <PlatformTarget>x64</PlatformTarget>
+    <LangVersion>latest</LangVersion>
+    <AssemblyName>DwgBatchPlotTool</AssemblyName>
+    <RootNamespace>DwgBatchPlotTool</RootNamespace>
+    <Product>DWG/DXF 批量转 PDF</Product>
+    <Company>唐明龙</Company>
+    <Authors>唐明龙</Authors>
+    <Copyright>Copyright © 2026 唐明龙 (QQ 979123550)</Copyright>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <OutputPath>..\..\bin\</OutputPath>
+    <DebugType>pdbonly</DebugType>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <ApplicationIcon>..\..\icon.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- JSON 序列化用框架自带的 JavaScriptSerializer, 不引入任何新依赖 -->
+    <Reference Include="System.Web.Extensions" />
+  </ItemGroup>
+
+  <!-- HTML 界面资源, 编译进 exe, 单文件发布不散落 -->
+  <ItemGroup>
+    <EmbeddedResource Include="ui\index.html" LogicalName="DwgBatchPlotTool.ui.index.html" />
+    <EmbeddedResource Include="ui\style.css" LogicalName="DwgBatchPlotTool.ui.style.css" />
+    <EmbeddedResource Include="ui\app.js" LogicalName="DwgBatchPlotTool.ui.app.js" />
+    <EmbeddedResource Include="ui\icon.svg" LogicalName="DwgBatchPlotTool.ui.icon.svg" />
+    <EmbeddedResource Include="ui\help.html" LogicalName="DwgBatchPlotTool.ui.help.html" />
+    <EmbeddedResource Include="ui\donate.png" LogicalName="DwgBatchPlotTool.ui.donate.png" />
+  </ItemGroup>
+  <!-- 运行目录自包含: 把 ODA 运行库 / 字体 / 打印样式一起带上, 整个 bin\ 可直接拷到别的机器运行 -->
+  <Target Name="CopyRuntime" AfterTargets="Build">
+    <ItemGroup>
+      <RuntimeOda Include="$(MSBuildThisFileDirectory)..\..\ODA\**\*.*" Exclude="$(MSBuildThisFileDirectory)..\..\ODA\**\*.pdb" />
+      <RuntimeFonts Include="$(MSBuildThisFileDirectory)..\..\Fonts\**\*.*" />
+      <RuntimePlotStyles Include="$(MSBuildThisFileDirectory)..\..\PlotStyles\**\*.*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(RuntimeOda)" DestinationFolder="$(OutDir)ODA\%(RecursiveDir)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(RuntimeFonts)" DestinationFolder="$(OutDir)Fonts\%(RecursiveDir)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(RuntimePlotStyles)" DestinationFolder="$(OutDir)PlotStyles\%(RecursiveDir)" SkipUnchangedFiles="true" />
+  </Target>
+
+</Project>
