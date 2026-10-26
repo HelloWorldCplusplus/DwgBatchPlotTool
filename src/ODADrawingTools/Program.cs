@@ -898,6 +898,8 @@ namespace ODADrawingTools
     // 部分图框文件(如 图框_Ref.dwg)的文字样式(如 TEXT1)字体名为空，渲染时回退到单字节
     // SHX 逐字节渲染中文 → 标题栏出现乱码(CAD 有自己的回退机制所以显示正常)。
     // 这里把无字体定义的样式映射为宋体(经 FindFile 解析到系统 simsun.ttc)。
+    // 注意: TTF 样式的字体名不在 FileName 里(那是 SHX 的字段), 而在 Font.TypeFace;
+    // 只看 FileName 会把正常的 TTF 样式误判成"无字体"并改成宋体, 所以三处都为空才算无字体。
     static void FixEmptyTextStyles(Database database)
     {
       using (TextStyleTable st = (TextStyleTable)database.TextStyleTableId.GetObject(OpenMode.ForRead))
@@ -908,17 +910,18 @@ namespace ODADrawingTools
           {
             using (TextStyleTableRecord tsr = (TextStyleTableRecord)id.GetObject(OpenMode.ForWrite))
             {
-              string fn = "", big = "";
+              string fn = "", big = "", face = "";
               try { fn = tsr.FileName ?? ""; } catch { }
               try { big = tsr.BigFontFileName ?? ""; } catch { }
-              if (fn.Trim().Length == 0 && big.Trim().Length == 0)
+              try { if (tsr.Font != null) face = tsr.Font.TypeFace ?? ""; } catch { }
+              if (fn.Trim().Length == 0 && big.Trim().Length == 0 && face.Trim().Length == 0)
               {
                 tsr.FileName = "SimSun.ttf";
                 Console.Error.WriteLine("INFO: 文字样式 '" + tsr.Name + "' 无字体定义，已映射为 SimSun.ttf");
               }
               else
               {
-                Console.Error.WriteLine("INFO: 样式 '" + tsr.Name + "' font=[" + fn + "] bigfont=[" + big + "]");
+                Console.Error.WriteLine("INFO: 样式 '" + tsr.Name + "' font=[" + fn + "] bigfont=[" + big + "] typeface=[" + face + "]");
               }
             }
           }
