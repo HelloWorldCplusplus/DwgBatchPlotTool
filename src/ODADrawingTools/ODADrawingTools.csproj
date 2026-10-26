@@ -13,6 +13,8 @@
     <RootNamespace>ODADrawingTools</RootNamespace>
     <Authors>唐明龙</Authors>
     <Copyright>Copyright © 2026 唐明龙 (QQ 979123550)</Copyright>
+    <Version>1.0.1</Version>
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
     <LangVersion>latest</LangVersion>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>

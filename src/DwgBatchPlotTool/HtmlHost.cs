@@ -196,11 +196,11 @@ namespace DwgBatchPlotTool
                 if (!path.StartsWith(root, StringComparison.Ordinal)) { Fail(ctx, 403, "forbidden"); return; }
                 string rel = path.Substring(root.Length);
 
-                if (rel == "" || rel == "index.html") { Send(ctx, "text/html; charset=utf-8", Asset("index.html").Replace("__THEME__", Theme())); return; }
+                if (rel == "" || rel == "index.html") { Send(ctx, "text/html; charset=utf-8", Asset("index.html").Replace("__THEME__", Theme()).Replace("__VERSION__", Version)); return; }
                 if (rel == "app.js") { Send(ctx, "application/javascript; charset=utf-8", Asset("app.js")); return; }
                 if (rel == "style.css") { Send(ctx, "text/css; charset=utf-8", Asset("style.css")); return; }
                 if (rel == "icon.svg") { Send(ctx, "image/svg+xml", Asset("icon.svg")); return; }
-                if (rel == "help.html") { Send(ctx, "text/html; charset=utf-8", Asset("help.html")); return; }
+                if (rel == "help.html") { Send(ctx, "text/html; charset=utf-8", Asset("help.html").Replace("__VERSION__", Version)); return; }
                 if (rel == "donate.png") { SendBytes(ctx, "image/png", AssetBytes("donate.png")); return; }
                 if (!rel.StartsWith("api/", StringComparison.Ordinal)) { Fail(ctx, 404, "not found"); return; }
 
@@ -733,6 +733,12 @@ namespace DwgBatchPlotTool
         }
 
         // ------------------------------------------------------------ 静态资源 (嵌入 exe)
+
+        /// <summary>程序版本，取自 csproj 的 &lt;Version&gt;（如 1.0.1）。</summary>
+        internal static string Version
+        {
+            get { return typeof(HtmlHost).Assembly.GetName().Version.ToString(3); }
+        }
 
         internal static string Asset(string name)
         {
