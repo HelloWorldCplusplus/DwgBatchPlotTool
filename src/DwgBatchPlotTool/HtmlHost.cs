@@ -537,6 +537,7 @@ namespace DwgBatchPlotTool
             {
                 { "refName", "图框" }, { "scale", "" },
                 { "frameOrder", PlotOptions.FrameOrderDefault },
+                { "dpi", PlotOptions.DpiDefault },
                 { "offsetX", "0" }, { "offsetY", "0" }, { "customW", "420" }, { "customH", "297" },
                 { "mergedName", "合并输出" }, { "outputDir", Path.Combine(OdaRunner.RootDir, "output") },
                 { "ctb", OdaRunner.DefaultCtb }, { "timeout", "300" },
@@ -630,6 +631,8 @@ namespace DwgBatchPlotTool
             o.Space = space == 0 ? PlotSpace.Model : space == 1 ? PlotSpace.Layout : PlotSpace.Both;
             string fo = Str(d, "frameOrder", PlotOptions.FrameOrderDefault).Trim();
             o.FrameOrder = fo.Length > 0 ? fo : PlotOptions.FrameOrderDefault;
+            int dpi = (int)Dbl(d, "dpi", PlotOptions.DpiDefault);
+            o.Dpi = dpi >= 100 && dpi <= 4800 ? dpi : PlotOptions.DpiDefault;
             int paper = (int)Dbl(d, "paper", PlotOptions.DefaultPaperIndex);
             o.PaperPreset = paper >= 0 && paper < PlotOptions.PaperNames.Length ? PlotOptions.PaperNames[paper] : "A3";
             o.Portrait = (int)Dbl(d, "orientation", 0) == 1;

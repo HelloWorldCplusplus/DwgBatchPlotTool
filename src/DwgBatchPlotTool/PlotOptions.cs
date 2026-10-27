@@ -14,6 +14,8 @@ namespace DwgBatchPlotTool
         public PlotSpace Space = PlotSpace.Both;
         // 一张图纸里有多张图框时的页序 (引擎 --frame-order)
         public string FrameOrder = FrameOrderDefault;
+        // 输出精度 (引擎 --dpi)：600 = 内核默认，数值越大曲线/图片/渐变越精细、文件越大
+        public int Dpi = DpiDefault;
         public string PaperPreset = "A3";
         public double CustomW = 420, CustomH = 297;
         public bool Portrait;
@@ -38,6 +40,8 @@ namespace DwgBatchPlotTool
         public const string PaperDefault = "按图框(A3)";
 
         public const string FrameOrderDefault = "xrightydown";
+
+        public const int DpiDefault = 600;
 
         private static readonly Dictionary<string, double[]> Papers = new Dictionary<string, double[]>
         {
@@ -103,6 +107,8 @@ namespace DwgBatchPlotTool
             a.Add(output);
             if (RefName.Trim().Length > 0) { a.Add("--ref"); a.Add(RefName.Trim()); }
             if (FrameOrder != FrameOrderDefault) { a.Add("--frame-order"); a.Add(FrameOrder); }
+            a.Add("--dpi");
+            a.Add(Dpi.ToString(CultureInfo.InvariantCulture));
             a.Add("--space");
             a.Add(Space == PlotSpace.Model ? "model" : Space == PlotSpace.Layout ? "layout" : "both");
             if (Mono) a.Add("--mono");

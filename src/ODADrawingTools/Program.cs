@@ -313,6 +313,7 @@ namespace ODADrawingTools
         // ---------- 解析命令行 ----------
         string input = null, output = null, ctb = "", title = "DWG to PDF", author = "dwg2pdf";
         bool mono = false, embedTtf = false, layers = true, dxf = false;
+        int dpi = 0;
         double pw = 0, ph = 0;
 
         for (int i = 0; i < args.Length; i++)
@@ -322,6 +323,12 @@ namespace ODADrawingTools
           else if (a == "--embed-ttf") embedTtf = true;
           else if (a == "--no-layers") layers = false;
           else if (a == "--dxf") dxf = true;
+          else if (a == "--dpi" && i + 1 < args.Length)                     // 输出精度
+          {
+            int d;
+            if (int.TryParse(args[++i], out d) && d >= 100 && d <= 4800) dpi = d;
+            else Console.Error.WriteLine("WARN: 无效的 --dpi: " + args[i] + " (100~4800，600=默认)");
+          }
           else if (a == "--ctb" && i + 1 < args.Length) ctb = args[++i];
           else if (a == "--title" && i + 1 < args.Length) title = args[++i];
           else if (a == "--author" && i + 1 < args.Length) author = args[++i];
@@ -443,6 +450,7 @@ namespace ODADrawingTools
               flags |= PDFExportFlags.TTFTextAsGeometry;
               param.SearchTextType = SearchableTextType.NoSearch; // 所有文字转几何(不以可搜索文本导出)
               param.Flags = flags;
+              ApplyDpi(param, dpi);
 
               param.Title = title;
               param.Author = author;
@@ -844,6 +852,22 @@ namespace ODADrawingTools
       // xrightydown=先左→右、再上→下(默认) / xrightyup=先左→右、再下→上
       // ydownxright=先上→下、再左→右 / yupxright=先下→上、再左→右
       public string frameOrder = "xrightydown";
+      // 输出精度(DPI)，0 = 不干预(内核默认 矢量 600 / 图片 400 / 渐变 72)，
+      // 其它值按 矢量=dpi、图片=渐变=dpi*2/3 换算
+      public int dpi = 0;
+    }
+
+    // 按 --dpi 覆盖 PDF 导出的分辨率参数。
+    // 三个分辨率参数一律取同一个值 —— 界面上写的 dpi 就是实际生效的 dpi，
+    // 不做 2/3 之类的隐式换算，否则用户调 600 出来的图片却是 400。
+    static void ApplyDpi(mPDFExportParams param, int dpi)
+    {
+      if (dpi <= 0) return;
+      param.vectorDPI = (uint)dpi;
+      param.colorImagesDPI = (uint)dpi;
+      param.bwImagesDPI = (uint)dpi;
+      param.hatchDPI = (uint)dpi;
+      Console.Error.WriteLine("INFO: 输出精度 " + dpi + "dpi (矢量/图片/渐变一致)");
     }
 
     // 初始化 ODA/Teigha 运行时（每次进程内调用一次）
@@ -1232,6 +1256,7 @@ namespace ODADrawingTools
           flags |= PDFExportFlags.TTFTextAsGeometry;
           param.SearchTextType = SearchableTextType.NoSearch; // 所有文字转几何(不以可搜索文本导出)
           param.Flags = flags;
+          ApplyDpi(param, ex.dpi);
           param.Title = title;
           param.Author = author;
 
@@ -1626,6 +1651,12 @@ namespace ODADrawingTools
             pex.frameOrder = fo;
           else
             Console.Error.WriteLine("WARN: 无效的 --frame-order: " + fo + " (可选 xrightydown/xrightyup/ydownxright/yupxright)");
+        }
+        else if (a == "--dpi" && i + 1 < args.Length)                       // 输出精度
+        {
+          int d;
+          if (int.TryParse(args[++i], out d) && d >= 100 && d <= 4800) pex.dpi = d;
+          else Console.Error.WriteLine("WARN: 无效的 --dpi: " + args[i] + " (100~4800，600=默认)");
         }
         else if (a == "--paper" && i + 2 < args.Length)
         {
@@ -2023,6 +2054,8 @@ namespace ODADrawingTools
       Console.WriteLine("                        xrightyup=先左→右再下→上 / ydownxright=先上→下再左→右 /");
       Console.WriteLine("                        yupxright=先下→上再左→右");
       Console.WriteLine("    --mono         单色输出 (需 monochrome.ctb/monochrome.stb)");
+      Console.WriteLine("    --dpi <值>     输出精度 100~4800，600=默认(矢量600dpi/图片400dpi/渐变72dpi)；");
+      Console.WriteLine("                   其它值按 图片=dpi*2/3、渐变=dpi/2 换算，数值越大越清楚、文件越大");
       Console.WriteLine("    --ctb <文件>   应用 CTB/STB 打印样式表");
       Console.WriteLine("    --paper W H    自定义纸张尺寸(mm)，覆盖自适应尺寸");
       Console.WriteLine("    --center             居中打印");

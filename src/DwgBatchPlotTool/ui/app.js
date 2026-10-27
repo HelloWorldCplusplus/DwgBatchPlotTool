@@ -70,6 +70,7 @@
     ['refName', 'scale', 'offsetX', 'offsetY', 'customW', 'customH',
       'mergedName', 'outputDir', 'ctb', 'timeout', 'space', 'paper', 'lineweight', 'orientation',
       'frameOrder',
+    'dpi',
       'fontsDir'
     ].forEach(function (k) { o[k] = $(k) ? $(k).value : ''; });
     ['center', 'fit', 'mono', 'plotstyles', 'hidden'].forEach(function (k) {
