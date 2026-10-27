@@ -344,3 +344,7 @@ table.help-tab th:first-child, table.help-tab td:first-child { width: 170px; col
   border: 3px dashed var(--accent);
   pointer-events: none; z-index: 60;
 }
+
+/* 表格里点选 / Shift 区间选时，别顺带把文字也选上 */
+#files, #files * { user-select: none; -webkit-user-select: none; }
+#files input { user-select: text; -webkit-user-select: text; }
