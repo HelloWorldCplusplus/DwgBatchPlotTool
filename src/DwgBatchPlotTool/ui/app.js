@@ -9,6 +9,7 @@
   var busy = false;
   var refDetails = [];       // 已加入图纸里的块参照明细
   var rowByPath = {};        // path -> 行元素
+  var lastPath = '';         // 单击选中的行, 作为 Shift 区间选择的锚点
 
   function api(action, body) {
     return fetch(API + action, {
@@ -108,8 +109,20 @@
           '<td class="c8 chk"><input type="checkbox" checked></td>' +
           '<td class="c9"><button class="row-del" title="移除此行">✕</button></td>';
         tr.addEventListener('click', function (e) {
+          if (e.shiftKey && lastPath && rowByPath[lastPath]) {
+            // Shift 点选: 从锚点行到这里整段选中 (按住 Ctrl 则加到已有选择上)
+            var names = Object.keys(rowByPath);
+            var a = names.indexOf(lastPath), b = names.indexOf(it.path);
+            if (a >= 0 && b >= 0) {
+              if (!e.ctrlKey) selected = {};
+              for (var k = Math.min(a, b); k <= Math.max(a, b); k++) selected[names[k]] = true;
+              paintSel();
+              return;      // 锚点不动, 便于反复调整范围
+            }
+          }
           if (e.ctrlKey) selected[it.path] = !selected[it.path];
           else { selected = {}; selected[it.path] = true; }
+          lastPath = it.path;
           paintSel();
         });
         tr.children[5].addEventListener('click', function (e) {
