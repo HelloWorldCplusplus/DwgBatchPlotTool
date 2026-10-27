@@ -308,7 +308,8 @@ table.help-tab th:first-child, table.help-tab td:first-child { width: 170px; col
 
 /* ---------- 帮助里的插图 ---------- */
 .help-fig { margin: 12px 0 6px; }
-.help-fig svg {
+.help-fig img { padding: 0; }
+.help-fig svg, .help-fig img {
   width: 100%; height: auto; display: block;
   background: var(--panel-alt); border: 1px solid var(--border-soft);
   border-radius: 8px; padding: 10px;
@@ -318,7 +319,7 @@ table.help-tab th:first-child, table.help-tab td:first-child { width: 170px; col
 }
 .help-legend {
   list-style: none; padding: 0; margin: 10px 0 4px;
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 4px 18px;
+  display: grid; grid-template-columns: 1fr; gap: 4px 18px;
 }
 .help-legend li { margin: 0; font-size: 12.5px; color: var(--muted); }
 .help-legend b { color: var(--text); }

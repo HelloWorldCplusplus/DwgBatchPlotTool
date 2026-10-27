@@ -35,7 +35,8 @@ DwgBatchPlotTool\
 ├─ LICENSE                   MIT 许可（第三方运行库除外，见「许可协议」）
 ├─ docs\                     文档配图
 │  ├─ screenshot.png         README 里的界面截图
-│  └─ shoot.py               重新生成截图的脚本（Edge 无头 + Playwright）
+│  ├─ shoot.py               重新生成截图的脚本（Edge 无头 + Playwright）
+│  ├─ shoot_help.py          重新生成帮助页界面总览图（按控件位置画 1~6 编号）
 ├─ src\                       源码（一个项目一个子目录）
 │  ├─ DwgBatchPlotTool\       界面程序
 │  │  ├─ Program.cs           入口

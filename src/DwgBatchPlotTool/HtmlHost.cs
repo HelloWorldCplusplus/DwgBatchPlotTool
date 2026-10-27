@@ -201,7 +201,7 @@ namespace DwgBatchPlotTool
                 if (rel == "style.css") { Send(ctx, "text/css; charset=utf-8", Asset("style.css")); return; }
                 if (rel == "icon.svg") { Send(ctx, "image/svg+xml", Asset("icon.svg")); return; }
                 if (rel == "help.html") { Send(ctx, "text/html; charset=utf-8", Asset("help.html").Replace("__VERSION__", Version)); return; }
-                if (rel == "donate.png") { SendBytes(ctx, "image/png", AssetBytes("donate.png")); return; }
+                if (rel.EndsWith(".png", StringComparison.OrdinalIgnoreCase)) { byte[] img = AssetBytes(rel); if (img != null) { SendBytes(ctx, "image/png", img); return; } }
                 if (!rel.StartsWith("api/", StringComparison.Ordinal)) { Fail(ctx, 404, "not found"); return; }
 
                 string action = rel.Substring(4);

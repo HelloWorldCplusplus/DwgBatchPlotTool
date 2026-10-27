@@ -34,7 +34,7 @@
     <EmbeddedResource Include="ui\app.js" LogicalName="DwgBatchPlotTool.ui.app.js" />
     <EmbeddedResource Include="ui\icon.svg" LogicalName="DwgBatchPlotTool.ui.icon.svg" />
     <EmbeddedResource Include="ui\help.html" LogicalName="DwgBatchPlotTool.ui.help.html" />
-    <EmbeddedResource Include="ui\donate.png" LogicalName="DwgBatchPlotTool.ui.donate.png" />
+    <EmbeddedResource Include="ui\*.png" LogicalName="DwgBatchPlotTool.ui.%(Filename)%(Extension)" />
   </ItemGroup>
   <!-- 运行目录自包含: 把 ODA 运行库 / 字体 / 打印样式一起带上, 整个 bin\ 可直接拷到别的机器运行 -->
   <Target Name="CopyRuntime" AfterTargets="Build">
