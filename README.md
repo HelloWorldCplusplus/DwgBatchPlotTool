@@ -51,6 +51,8 @@ DwgBatchPlotTool\
 │  │     ├─ help.html         使用帮助（「帮助」按钮弹出）
 │  │     ├─ app.js            页面逻辑（轮询状态、提交参数）
 │  │     ├─ style.css         样式
+│  │     ├─ help-ui.png       帮助页里的界面总览图（docs\shoot_help.py 生成）
+│  │     ├─ donate.png        收款码（README / 帮助页共用这一份）
 │  │     └─ icon.svg          图标源文件
 │  └─ ODADrawingTools\        引擎程序
 │     ├─ Program.cs           ODA 出图引擎主程序（DXF/DWG→PDF）
@@ -105,7 +107,7 @@ DwgBatchPlotTool\
 列表每行有两列操作：**转换**（勾选框，加入的文件默认都勾上，取消勾选的这次不转）和 **✕**（把这行从列表里去掉）。
 勾选状态只影响本次转换，不影响文件本身。
 
-**使用帮助**：工具栏右侧的 **「帮助」** 按钮弹出一份完整说明（快速上手、界面分区图、工作流程图、文件列表各列、参数速查、参照名分页打印示意图、纸张与方向、常见问题、无界面用法）。全部插图是内嵌 SVG，跟着界面深/浅色主题一起变色，不带任何外部图片。内容在 `src\DwgBatchPlotTool\ui\help.html`，编译进 exe，按需从 `help.html` 路由拉取。
+**使用帮助**：工具栏右侧的 **「帮助」** 按钮弹出一份完整说明（快速上手、界面总览图、工作流程图、文件列表各列、参数速查、参照名分页打印示意图、纸张与方向、版本更新、常见问题、无界面用法）。界面总览是一张按控件位置标了 1~6 的真实界面截图（`ui\help-ui.png`），由 `docs\shoot_help.py` 现场生成；其余插图是内嵌 SVG，跟着界面深/浅色主题变色。内容在 `src\DwgBatchPlotTool\ui\help.html`，连同图片一起编译进 exe，按需从 `help.html` / `help-ui.png` 路由拉取。
 
 参数会记在与 `DwgBatchPlotTool.exe` 同目录的 `settings.ini`（即 `bin\settings.ini`），下次打开自动恢复。
 
