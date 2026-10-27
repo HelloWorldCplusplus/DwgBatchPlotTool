@@ -333,3 +333,14 @@ table.help-tab th:first-child, table.help-tab td:first-child { width: 170px; col
 .help-note p { margin: 4px 0; }
 
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+
+/* 拖拽文件 / 文件夹进窗口时的提示遮罩 */
+#app.dragover::after {
+  content: "松开鼠标，添加这些图纸";
+  position: fixed; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 17px; color: var(--accent);
+  background: rgba(0, 0, 0, .45);
+  border: 3px dashed var(--accent);
+  pointer-events: none; z-index: 60;
+}

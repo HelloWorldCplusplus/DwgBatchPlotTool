@@ -429,6 +429,99 @@
     }
   });
 
+  // ---------- 拖拽添加 ----------
+  // 浏览器只给 File 对象、拿不到磁盘路径, 所以先把内容传到程序里落到临时目录,
+  // 再按「添加文件夹」递归收集一次 —— 子目录结构由临时目录里的层级还原。
+  var dropDepth = 0;
+
+  function hasFiles(e) {
+    var t = e.dataTransfer && e.dataTransfer.types;
+    return !!t && Array.prototype.indexOf.call(t, 'Files') >= 0;
+  }
+
+  function walkEntry(entry, prefix, out, done) {
+    if (entry.isFile) {
+      entry.file(function (f) { out.push({ file: f, rel: prefix + entry.name }); done(); }, done);
+    } else if (entry.isDirectory) {
+      var reader = entry.createReader(), all = [];
+      (function read() {
+        reader.readEntries(function (ents) {
+          if (!ents.length) {
+            var left = all.length;
+            if (!left) { done(); return; }
+            all.forEach(function (e) {
+              walkEntry(e, prefix + entry.name + '/', out, function () { if (--left === 0) done(); });
+            });
+            return;
+          }
+          all = all.concat(Array.prototype.slice.call(ents));
+          read();
+        }, done);
+      })();
+    } else done();
+  }
+
+  function collectDropped(dt, done) {
+    var items = dt.items ? Array.prototype.slice.call(dt.items) : [];
+    var out = [], settled = false, pending = 0;
+    function step() { if (!settled && pending === 0 && out.length) { settled = true; done(out); } }
+    function track() { pending++; return function () { pending--; step(); }; }
+    items.forEach(function (it) {
+      var entry = it.webkitGetAsEntry ? it.webkitGetAsEntry() : null;
+      if (entry) { walkEntry(entry, '', out, track()); return; }
+      var f = it.getAsFile ? it.getAsFile() : null;   // 拿不到 entry 时退回 File
+      if (f) out.push({ file: f, rel: f.name });
+    });
+    if (!items.length) {
+      Array.prototype.slice.call(dt.files || []).forEach(function (f) { out.push({ file: f, rel: f.name }); });
+    }
+    step();
+  }
+
+  function uploadDropped(list) {
+    var files = list.filter(function (x) { return /\.(dwg|dxf)$/i.test(x.rel); });
+    if (!files.length) { $('status').textContent = '拖进来的不是 dwg / dxf 文件'; return; }
+    var root = '';
+    (function next(i) {
+      if (i >= files.length) {
+        api('add', { dir: root }).then(function () { selected = {}; refresh(); });
+        return;
+      }
+      $('status').textContent = '正在接收拖入的文件 ' + (i + 1) + '/' + files.length + ' …';
+      fetch(API + 'upload', {
+        method: 'POST',
+        headers: { 'X-Name': encodeURIComponent(files[i].rel) },
+        body: files[i].file
+      })
+        .then(function (r) { return r.json(); })
+        .then(function (j) {
+          if (!j || !j.ok) throw new Error((j && j.error) || '接收失败');
+          root = j.root;
+          next(i + 1);
+        })
+        .catch(function (err) { $('status').textContent = '拖拽添加失败: ' + err.message; });
+    })(0);
+  }
+
+  window.addEventListener('dragenter', function (e) {
+    if (!hasFiles(e)) return;
+    e.preventDefault(); dropDepth++; $('app').classList.add('dragover');
+  });
+  window.addEventListener('dragover', function (e) {
+    if (!hasFiles(e)) return;
+    e.preventDefault(); e.dataTransfer.dropEffect = 'copy';
+  });
+  window.addEventListener('dragleave', function (e) {
+    if (!hasFiles(e)) return;
+    dropDepth = Math.max(0, dropDepth - 1);
+    if (!dropDepth) $('app').classList.remove('dragover');
+  });
+  window.addEventListener('drop', function (e) {
+    if (!hasFiles(e)) return;
+    e.preventDefault(); dropDepth = 0; $('app').classList.remove('dragover');
+    collectDropped(e.dataTransfer, uploadDropped);
+  });
+
   window.addEventListener('beforeunload', function () {
     try {
       navigator.sendBeacon(API + 'bye');

@@ -208,6 +208,7 @@ namespace DwgBatchPlotTool
                 if (action == "state") { GetState(ctx); return; }
                 if (action == "ping") { _lastPing = DateTime.UtcNow; _byeAt = DateTime.MinValue; Send(ctx, "application/json; charset=utf-8", "{\"ok\":true}"); return; }
                 if (action == "bye") { _byeAt = DateTime.UtcNow; Send(ctx, "application/json; charset=utf-8", "{\"ok\":true}"); return; }
+                if (action == "upload") { Upload(ctx); return; }
 
                 Dictionary<string, object> body = ReadJson(ctx);
                 Dictionary<string, object> resp;
@@ -366,6 +367,53 @@ namespace DwgBatchPlotTool
                 _state.Summary = "已添加 " + _state.Items.Count + " 个文件 (本次 +" + added + ")";
             }
             if (added > 0) _refs.Request(paths);
+        }
+
+        /// <summary>
+        /// 接收拖进界面的文件。浏览器不给真实路径，只能把内容传上来落到临时目录,
+        /// 之后前端按「添加文件夹」收集一次, 子目录结构就由临时目录里的相对层级还原。
+        /// </summary>
+        private void Upload(HttpListenerContext ctx)
+        {
+            // 名字走请求头 (UTF-8 百分号编码), 走 query 会被 HttpListener 按系统代码页解错中文
+            string raw = ctx.Request.Headers["X-Name"];
+            string name = string.IsNullOrEmpty(raw) ? null : Uri.UnescapeDataString(raw);
+            byte[] data = ReadAllBytes(ctx.Request.InputStream);
+            string rel = SafeRelName(name);
+            if (!IsDrawing(rel)) throw new Exception("只接受 dwg / dxf: " + name);
+            string root = Path.Combine(Path.GetTempPath(), "dwgbp-drop", _token);
+            string full = Path.Combine(root, rel);
+            Directory.CreateDirectory(Path.GetDirectoryName(full));
+            File.WriteAllBytes(full, data);
+            Send(ctx, "application/json; charset=utf-8", _json.Serialize(new Dictionary<string, object>
+            {
+                { "ok", true }, { "path", full }, { "root", root }
+            }));
+        }
+
+        /// <summary>把浏览器给的相对名变成安全的相对路径 (去掉 .. 与非法字符, 保留子目录层级)。</summary>
+        internal static string SafeRelName(string name)
+        {
+            var parts = new List<string>();
+            foreach (var raw in (name ?? "").Split(new[] { '/', '\\' }, StringSplitOptions.RemoveEmptyEntries))
+            {
+                string s = raw.Trim();
+                if (s.Length == 0 || s == "." || s == "..") continue;
+                foreach (char c in Path.GetInvalidFileNameChars()) s = s.Replace(c, '_');
+                s = s.TrimEnd('.', ' ');
+                if (s.Length > 0) parts.Add(s);
+            }
+            if (parts.Count == 0) throw new Exception("文件名无效");
+            return string.Join(Path.DirectorySeparatorChar.ToString(), parts.ToArray());
+        }
+
+        private static byte[] ReadAllBytes(Stream s)
+        {
+            using (var ms = new MemoryStream())
+            {
+                s.CopyTo(ms);
+                return ms.ToArray();
+            }
         }
 
         private void Remove(Dictionary<string, object> body)
