@@ -2,7 +2,7 @@
 
 从某 CAD 工程的 ODA 绘图功能中提取出来的独立批量转换工具，界面是 **HTML**（浏览器渲染）。
 
-当前版本：**1.0.2**（版本号在 `src\DwgBatchPlotTool\DwgBatchPlotTool.csproj` 与 `src\ODADrawingTools\ODADrawingTools.csproj` 的 `<Version>` 里，界面与帮助页显示的就是它）
+当前版本：**1.0.3**（版本号在 `src\DwgBatchPlotTool\DwgBatchPlotTool.csproj` 与 `src\ODADrawingTools\ODADrawingTools.csproj` 的 `<Version>` 里，界面与帮助页显示的就是它）
 
 本程序开源免费使用，严禁转卖，否则生儿子没屁眼。
 
