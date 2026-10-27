@@ -109,6 +109,7 @@
           '<td class="c8 chk"><input type="checkbox" checked></td>' +
           '<td class="c9"><button class="row-del" title="移除此行">✕</button></td>';
         tr.addEventListener('click', function (e) {
+          if (skipClick) { skipClick = false; return; }   // 刚框选过, 这次 click 忽略
           if (e.shiftKey && lastPath && rowByPath[lastPath]) {
             // Shift 点选: 从锚点行到这里整段选中 (按住 Ctrl 则加到已有选择上)
             var names = Object.keys(rowByPath);
@@ -441,6 +442,65 @@
       selected = {}; paintSel();
     }
   });
+
+  // ---------- 框选 (左键拖出矩形, 落到矩形里的行都选中) ----------
+  var dragSel = null;          // { x, y, base } 拖拽起点与按下 Ctrl 时的原有选择
+  var skipClick = false;       // 拖过之后紧跟的那次 click 要吃掉, 否则会退化成单选
+
+  function marquee() {
+    var el = document.getElementById('marquee');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'marquee';
+      el.className = 'hidden';
+      document.body.appendChild(el);
+    }
+    return el;
+  }
+
+  function rowsInRect(x1, y1, x2, y2) {
+    var l = Math.min(x1, x2), t = Math.min(y1, y2);
+    var r = Math.max(x1, x2), b = Math.max(y1, y2);
+    var hit = [];
+    Object.keys(rowByPath).forEach(function (p) {
+      var q = rowByPath[p].getBoundingClientRect();
+      if (q.right >= l && q.left <= r && q.bottom >= t && q.top <= b) hit.push(p);
+    });
+    return hit;
+  }
+
+  $('files').addEventListener('mousedown', function (e) {
+    if (e.button !== 0) return;
+    if (e.target.closest && e.target.closest('input,button,a')) return;   // 输入框/按钮上照旧
+    dragSel = { x: e.clientX, y: e.clientY, base: (e.ctrlKey || e.metaKey) ? Object.keys(selected) : [] };
+    skipClick = false;
+  });
+
+  window.addEventListener('mousemove', function (e) {
+    if (!dragSel) return;
+    var dx = e.clientX - dragSel.x, dy = e.clientY - dragSel.y;
+    if (!skipClick && Math.abs(dx) < 4 && Math.abs(dy) < 4) return;       // 抖一下不算拖
+    skipClick = true;
+    var box = marquee();
+    box.classList.remove('hidden');
+    box.style.left = Math.min(dragSel.x, e.clientX) + 'px';
+    box.style.top = Math.min(dragSel.y, e.clientY) + 'px';
+    box.style.width = Math.abs(dx) + 'px';
+    box.style.height = Math.abs(dy) + 'px';
+    selected = {};
+    dragSel.base.forEach(function (p) { selected[p] = true; });
+    rowsInRect(dragSel.x, dragSel.y, e.clientX, e.clientY).forEach(function (p) { selected[p] = true; });
+    paintSel();
+  });
+
+  window.addEventListener('mouseup', function () {
+    if (!dragSel) return;
+    dragSel = null;
+    marquee().classList.add('hidden');
+    if (skipClick) { lastPath = ''; }   // 框选后不保留 Shift 锚点
+  });
+
+  window.addEventListener('click', function () { skipClick = false; }, false);
 
   // ---------- 拖拽添加 ----------
   // 浏览器只给 File 对象、拿不到磁盘路径, 所以先把内容传到程序里落到临时目录,

@@ -348,3 +348,10 @@ table.help-tab th:first-child, table.help-tab td:first-child { width: 170px; col
 /* 表格里点选 / Shift 区间选时，别顺带把文字也选上 */
 #files, #files * { user-select: none; -webkit-user-select: none; }
 #files input { user-select: text; -webkit-user-select: text; }
+
+/* 左键框选时的矩形 */
+#marquee {
+  position: fixed; border: 1px solid var(--accent);
+  background: rgba(59, 130, 246, .18); pointer-events: none; z-index: 55;
+}
+#marquee.hidden { display: none; }
