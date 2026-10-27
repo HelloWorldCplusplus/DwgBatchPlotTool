@@ -309,6 +309,7 @@
   }
 
   function refresh() {
+    if (dragSel) return;      // 框选中不重建列表, 免得行被换掉、列表闪动
     fetch(API + 'state').then(function (r) { return r.json(); })
       .then(render)
       .catch(function () { });
@@ -469,17 +470,14 @@
     return hit;
   }
 
-  $('files').addEventListener('mousedown', function (e) {
-    if (e.button !== 0) return;
-    if (e.target.closest && e.target.closest('input,button,a')) return;   // 输入框/按钮上照旧
-    dragSel = { x: e.clientX, y: e.clientY, base: (e.ctrlKey || e.metaKey) ? Object.keys(selected) : [] };
-    skipClick = false;
-  });
+  // 用 pointer 事件 + 指针捕获: 拖到窗口外也照样收到 move/up, 并且 preventDefault 挡掉
+  // 浏览器自己的选字与自动滚动 (之前用 mousedown/mousemove, 实际拖起来页面会跟着滚)。
+  var fileWrap = document.getElementById('fileWrap');
 
-  window.addEventListener('mousemove', function (e) {
+  function dragMove(e) {
     if (!dragSel) return;
     var dx = e.clientX - dragSel.x, dy = e.clientY - dragSel.y;
-    if (!skipClick && Math.abs(dx) < 4 && Math.abs(dy) < 4) return;       // 抖一下不算拖
+    if (!skipClick && Math.abs(dx) < 3 && Math.abs(dy) < 3) return;       // 抖一下不算拖
     skipClick = true;
     var box = marquee();
     box.classList.remove('hidden');
@@ -491,13 +489,39 @@
     dragSel.base.forEach(function (p) { selected[p] = true; });
     rowsInRect(dragSel.x, dragSel.y, e.clientX, e.clientY).forEach(function (p) { selected[p] = true; });
     paintSel();
-  });
+  }
 
-  window.addEventListener('mouseup', function () {
+  function dragEnd() {
     if (!dragSel) return;
+    var dragged = skipClick;
     dragSel = null;
     marquee().classList.add('hidden');
-    if (skipClick) { lastPath = ''; }   // 框选后不保留 Shift 锚点
+    if (dragged) lastPath = '';   // 框选后不保留 Shift 锚点
+  }
+
+  fileWrap.addEventListener('pointerdown', function (e) {
+    if (e.button !== 0) return;
+    if (e.target.closest && e.target.closest('input,button,a')) return;   // 输入框/按钮上照旧
+    dragSel = { x: e.clientX, y: e.clientY, base: (e.ctrlKey || e.metaKey) ? Object.keys(selected) : [] };
+    skipClick = false;
+  });
+
+  // 在 mousedown 上拦默认行为 (pointerdown 上 preventDefault 会把后面的 click 一起吞掉,
+  // 单击选中就失效了); 这里只挡原生选字与拖拽, click 照常派发。
+  fileWrap.addEventListener('mousedown', function (e) {
+    if (!dragSel) return;
+    if (e.target.closest && e.target.closest('input,button,a')) return;
+    e.preventDefault();
+  });
+
+  // move/up 挂在 window 上: 指针移出列表甚至移出窗口也不丢事件, 又不像 setPointerCapture
+  // 那样把 click 的目标改到列表容器上 (那样行点击就全废了)。
+  window.addEventListener('pointermove', dragMove);
+  window.addEventListener('pointerup', dragEnd);
+  window.addEventListener('pointercancel', dragEnd);
+
+  document.addEventListener('selectstart', function (e) {
+    if (dragSel) e.preventDefault();
   });
 
   window.addEventListener('click', function () { skipClick = false; }, false);
