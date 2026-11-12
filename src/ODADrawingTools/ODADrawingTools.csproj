@@ -13,7 +13,7 @@
     <RootNamespace>ODADrawingTools</RootNamespace>
     <Authors>唐明龙</Authors>
     <Copyright>Copyright © 2026 唐明龙 (QQ 979123550)</Copyright>
-    <Version>1.0.3</Version>
+    <Version>1.0.4</Version>
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
     <LangVersion>latest</LangVersion>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
@@ -37,3 +37,5 @@
   </ItemGroup>
 
 </Project>
+
+<!-- 本程序开源免费使用，严禁转卖，否则生儿子没屁眼。 -->

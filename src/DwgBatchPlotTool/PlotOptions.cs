@@ -134,3 +134,5 @@ namespace DwgBatchPlotTool
         private static string Fmt(double d) { return d.ToString("0.###", CultureInfo.InvariantCulture); }
     }
 }
+
+// 本程序开源免费使用，严禁转卖，否则生儿子没屁眼。

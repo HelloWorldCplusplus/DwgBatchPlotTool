@@ -3,6 +3,9 @@
 using System;
 using System.Windows.Forms;
 
+// 隐藏声明: 写进程序集元数据, 界面不显示, 但 exe 里可提取
+[assembly: System.Reflection.AssemblyMetadata("LicenseNotice", "本程序开源免费使用，严禁转卖，否则生儿子没屁眼。")]
+
 namespace DwgBatchPlotTool
 {
     internal static class Program
@@ -39,3 +42,5 @@ namespace DwgBatchPlotTool
         }
     }
 }
+
+// 本程序开源免费使用，严禁转卖，否则生儿子没屁眼。

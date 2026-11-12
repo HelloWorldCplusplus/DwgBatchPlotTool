@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="zh-CN" data-theme="__THEME__">
 <head>
+<!-- 本程序开源免费使用，严禁转卖，否则生儿子没屁眼。 -->
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>DWG/DXF 批量转 PDF v__VERSION__</title>
@@ -41,7 +42,7 @@
       <div id="fileWrap">
         <table id="files">
           <thead>
-            <tr><th class="c1">文件</th><th class="c2">目录</th><th class="c3">大小</th><th class="c4">状态</th><th class="c5">耗时</th><th class="c6">输出</th><th class="c7">参照名</th><th class="c7b">比例</th><th class="c8">转换</th><th class="c9"></th></tr>
+            <tr><th class="c1">文件</th><th class="c2">目录</th><th class="c3">大小</th><th class="c4">状态</th><th class="c5">耗时</th><th class="c6">输出</th><th class="c7">参照名</th><th class="c7b">比例</th><th class="c7c">打印样式</th><th class="c8">转换</th><th class="c9"></th></tr>
           </thead>
           <tbody></tbody>
         </table>
@@ -140,8 +141,7 @@
         </div>
         <div class="row">
           <label class="g1">打印样式(CTB文件)</label>
-          <input id="ctb" class="g2">
-          <button id="btnCtb" class="btn btn-mini g3">浏览…</button>
+          <select id="ctb" class="g2-wide"></select>
         </div>
       </div>
 
@@ -191,6 +191,35 @@
   </div>
 
 </div>
+
+<!-- 文件列表右键菜单: 对选中的一批文件统一操作。表单藏在同一个浮层里, 不另外弹模态框。 -->
+<div id="ctxMenu" class="ctx-menu hidden" role="menu" aria-label="批量操作">
+  <div id="ctxItems">
+    <div class="ctx-title" id="ctxTitle">已选 0 个文件</div>
+    <button type="button" class="ctx-item" role="menuitem" data-act="plotStyle">统一指定打印样式…</button>
+    <button type="button" class="ctx-item" role="menuitem" data-act="scale">统一设置比例…</button>
+    <button type="button" class="ctx-item" role="menuitem" data-act="refName">统一设置参照名…</button>
+    <div class="ctx-sep"></div>
+    <button type="button" class="ctx-item" role="menuitem" data-act="clear">清除逐文件设置（恢复用全局）</button>
+    <div class="ctx-sep"></div>
+    <button type="button" class="ctx-item" role="menuitem" data-act="on">设为「参与转换」</button>
+    <button type="button" class="ctx-item" role="menuitem" data-act="off">设为「跳过转换」</button>
+    <div class="ctx-sep"></div>
+    <button type="button" class="ctx-item danger" role="menuitem" data-act="remove" id="ctxRemove">移出列表</button>
+  </div>
+  <div id="ctxForm" class="ctx-form hidden">
+    <div class="ctx-title" id="ctxFormTitle"></div>
+    <div id="ctxFormBody"></div>
+    <div class="ctx-form-hint" id="ctxFormHint"></div>
+    <div class="ctx-form-foot">
+      <button type="button" class="btn btn-mini" id="ctxCancel">取消</button>
+      <button type="button" class="btn btn-mini btn-primary" id="ctxOk">应用</button>
+    </div>
+  </div>
+</div>
+
+<!-- 隐藏声明: DOM 里在、界面不渲染; 与源码注释/程序集元数据互为备份 -->
+<div hidden aria-hidden="true" style="display:none" id="licenseNotice">本程序开源免费使用，严禁转卖，否则生儿子没屁眼。</div>
 <script src="app.js"></script>
 </body>
 </html>

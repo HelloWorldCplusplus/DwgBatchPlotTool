@@ -25,6 +25,7 @@ namespace DwgBatchPlotTool
         public bool Checked = true;   // 是否参与本次转换
         public string RefName = "";   // 单个文件指定的参照名, 空 = 用全局参照名
         public string Scale = "";      // 单个文件指定的比例, 空 = 用全局比例
+        public string PlotStyle = "";  // 单个文件指定的打印样式表, 空 = 用全局打印样式
     }
 
     /// <summary>界面状态: 文件列表 / 日志 / 进度。服务端权威, 页面轮询取。</summary>
@@ -58,6 +59,9 @@ namespace DwgBatchPlotTool
         private DateTime _lastPing = DateTime.UtcNow;
         private DateTime _byeAt = DateTime.MinValue;
         private string _prefix = "";
+        // 「打印样式」列的候选项缓存: state 每 800ms 拉一次, 没必要每次都扫盘
+        private List<Dictionary<string, object>> _plotStyleCache = new List<Dictionary<string, object>>();
+        private long _plotStyleCacheTicks;
 
         public HtmlHost()
         {
@@ -219,6 +223,8 @@ namespace DwgBatchPlotTool
                     case "check": Check(body); resp = null; break;
                     case "set-ref": SetRef(body); resp = null; break;
                     case "set-scale": SetScale(body); resp = null; break;
+                    case "set-plot-style": SetPlotStyle(body); resp = null; break;
+                    case "batch-set": resp = BatchSet(body); break;
                     case "clear": Clear(); resp = null; break;
                     case "rescan": Rescan(); resp = null; break;
                     case "start": resp = StartBatch(body); break;
@@ -295,8 +301,9 @@ namespace DwgBatchPlotTool
                     { "path", i.Path }, { "name", i.Name }, { "dir", i.Dir },
                     { "size", i.Size }, { "status", i.Status }, { "elapsed", i.Elapsed },
                     { "out", i.OutPath }, { "checked", i.Checked }, { "refName", i.RefName },
-                    { "scale", i.Scale }
+                    { "scale", i.Scale }, { "plotStyle", i.PlotStyle }
                 }).ToList();
+                d["plotStyles"] = PlotStyleChoices();   // 「打印样式」列的候选项
                 d["log"] = _state.Log.ToList();
                 d["refNames"] = _refs.Names();
                 d["refDetails"] = _refs.Rows(_state.Items.Select(i => i.Path)).Select(r => new Dictionary<string, object>
@@ -311,6 +318,60 @@ namespace DwgBatchPlotTool
                 d["refScanning"] = _refs.Scanning;
             }
             Send(ctx, "application/json; charset=utf-8", _json.Serialize(d));
+        }
+
+        // ------------------------------------------------------------ 打印样式候选
+
+        /// <summary>让候选列表立刻重新扫盘 (改了全局 CTB 或某行选了新样式时调用)。</summary>
+        private void InvalidatePlotStyles() { Interlocked.Exchange(ref _plotStyleCacheTicks, 0); }
+
+        /// <summary>
+        /// 「打印样式」列的候选项: 程序 PlotStyles\ 下的所有 .ctb/.stb,
+        /// 外加全局 CTB (可能指向别处) 与各文件当前选中的样式 (可能是浏览…选来的任意文件)。
+        /// 返回 [{name: 显示名, path: 绝对路径}], 调用方需持有 _state.Sync。
+        /// </summary>
+        private List<Dictionary<string, object>> PlotStyleChoices()
+        {
+            if (DateTime.UtcNow.Ticks - Interlocked.Read(ref _plotStyleCacheTicks) < TimeSpan.TicksPerSecond * 2)
+                return _plotStyleCache;
+
+            var map = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            string root = OdaRunner.PlotStylesDir;
+            try
+            {
+                foreach (var f in Directory.GetFiles(root, "*.*", SearchOption.AllDirectories))
+                {
+                    string ext = Path.GetExtension(f);
+                    if (!ext.Equals(".ctb", StringComparison.OrdinalIgnoreCase) &&
+                        !ext.Equals(".stb", StringComparison.OrdinalIgnoreCase)) continue;
+                    string full = Path.GetFullPath(f);
+                    string rel = full.StartsWith(root, StringComparison.OrdinalIgnoreCase)
+                        ? full.Substring(root.Length).TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
+                        : Path.GetFileName(full);
+                    map[full] = rel;
+                }
+            }
+            catch { /* 目录不在 / 没权限: 候选项可以为空, 不影响转换 */ }
+
+            Action<string> add = delegate(string p)
+            {
+                if (string.IsNullOrEmpty(p)) return;
+                try
+                {
+                    string full = Path.GetFullPath(p);
+                    if (File.Exists(full) && !map.ContainsKey(full)) map[full] = Path.GetFileName(full);
+                }
+                catch { }
+            };
+            add(CurrentOptions()["ctb"] as string);
+            foreach (var i in _state.Items) add(i.PlotStyle);
+
+            _plotStyleCache = map.Select(kv => new Dictionary<string, object>
+            {
+                { "name", kv.Value }, { "path", kv.Key }
+            }).OrderBy(x => x["name"] as string, StringComparer.OrdinalIgnoreCase).ToList();
+            Interlocked.Exchange(ref _plotStyleCacheTicks, DateTime.UtcNow.Ticks);
+            return _plotStyleCache;
         }
 
         // ------------------------------------------------------------ 文件列表
@@ -467,6 +528,69 @@ namespace DwgBatchPlotTool
             }
         }
 
+        /// <summary>给单个文件指定打印样式表 (空 = 用全局打印样式)。
+        /// 这里只记选择, 不校验文件存在: 真到出图时由 BatchRunner.ResolvePlotStyle 找文件,
+        /// 找不到就回退全局样式并写日志 (文件可能被删、程序也可能被挪到别的机器)。</summary>
+        private void SetPlotStyle(Dictionary<string, object> body)
+        {
+            string path = Str(body, "path", "").Trim();
+            string style = Str(body, "plotStyle", "", true).Trim();
+            lock (_state.Sync)
+            {
+                foreach (var i in _state.Items)
+                    if (string.Equals(i.Path, path, StringComparison.OrdinalIgnoreCase)) { i.PlotStyle = style; break; }
+            }
+            InvalidatePlotStyles();
+        }
+
+        /// <summary>
+        /// 批量修改选中文件的逐文件字段 (文件列表右键菜单用)。一次请求改完, 既省掉 N 个 HTTP
+        /// 往返, 也不会让 800ms 的状态轮询在改到一半时把界面刷回旧值。
+        /// body = { paths: [...], changes: { ... } }, changes 里只放本次要改的键:
+        ///   refName / scale / plotStyle / checked / clearOverrides (清掉前三项 = 恢复用全局)。
+        /// 校验全部前置, 写入在锁内一次完成 —— 比例格式不对时一个文件都不会被改。
+        /// 路径对不上的直接跳过, 不报错 (菜单可能已经开了一会儿, 期间文件被移走)。
+        /// </summary>
+        private Dictionary<string, object> BatchSet(Dictionary<string, object> body)
+        {
+            var paths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var arr = body.ContainsKey("paths") ? body["paths"] as ArrayList : null;
+            if (arr != null) foreach (var o in arr) if (o != null) paths.Add(o.ToString());
+
+            var c = body.ContainsKey("changes") ? body["changes"] as Dictionary<string, object> : null;
+            if (c == null || c.Count == 0) throw new ArgumentException("没有指定要批量修改的字段");
+
+            string refName = c.ContainsKey("refName") ? Str(c, "refName", "", true).Trim() : null;
+            string plotStyle = c.ContainsKey("plotStyle") ? Str(c, "plotStyle", "", true).Trim() : null;
+            string scale = null;
+            if (c.ContainsKey("scale"))
+            {
+                string raw = Str(c, "scale", "", true).Trim();
+                scale = PlotOptions.NormalizeScale(raw);
+                if (scale == null)
+                    throw new ArgumentException("比例格式不对: \"" + raw + "\" (应为 1:100；只写分母如 100 也可以；留空 = 用全局比例)");
+            }
+            bool? on = c.ContainsKey("checked") ? (bool?)Bool(c, "checked", true) : null;
+            bool clear = c.ContainsKey("clearOverrides") && Bool(c, "clearOverrides", false);
+
+            int changed = 0;
+            lock (_state.Sync)
+            {
+                foreach (var i in _state.Items)
+                {
+                    if (!paths.Contains(i.Path)) continue;
+                    if (clear) { i.RefName = ""; i.Scale = ""; i.PlotStyle = ""; }
+                    if (refName != null) i.RefName = refName;
+                    if (scale != null) i.Scale = scale;
+                    if (plotStyle != null) i.PlotStyle = plotStyle;
+                    if (on.HasValue) i.Checked = on.Value;
+                    changed++;
+                }
+            }
+            if (plotStyle != null || clear) InvalidatePlotStyles();
+            return new Dictionary<string, object> { { "ok", true }, { "changed", changed } };
+        }
+
         private void Clear()
         {
             lock (_state.Sync)
@@ -502,6 +626,20 @@ namespace DwgBatchPlotTool
             if (bodyOpts != null)
                 foreach (var k in bodyOpts.Keys) merged[k] = bodyOpts[k];
             var opt = ToOptions(merged);
+            // 全局打印样式与逐文件样式共用 ResolvePlotStyle: 支持只写文件名, 找不到就回退
+            // 程序自带的默认样式并写日志。merged 仍保留用户原选择, 下拉会标「找不到, 暂用默认」。
+            if (opt.PlotStyles && !string.IsNullOrEmpty(opt.CtbFile))
+            {
+                bool fallback;
+                string resolved = BatchRunner.ResolvePlotStyle(opt.CtbFile, OdaRunner.DefaultCtb, null, out fallback);
+                if (fallback)
+                {
+                    Log("WARN: 全局打印样式 \"" + opt.CtbFile + "\" 找不到, 已回退 " + OdaRunner.DefaultCtb);
+                    // 连默认样式都不在 (发布包缺文件) 时, 别把不存在的路径交给引擎
+                    if (!File.Exists(resolved)) resolved = "";
+                }
+                opt.CtbFile = resolved;
+            }
             merged["scale"] = opt.Scale;        // 回传规范化后的比例, 界面显示真正生效的值
             SaveOptions(merged);
             ApplyFontsDir(merged);              // 字体目录: 用户改了立刻生效
@@ -541,10 +679,12 @@ namespace DwgBatchPlotTool
                 }
             };
 
-            var refNames = items.Select(i => i.RefName).ToList();   // 单个文件自己的参照名 (空 = 用全局)
-            var scales = items.Select(i => i.Scale).ToList();       // 单个文件自己的比例 (空 = 用全局)
-            var relDirs = items.Select(i => i.Rel).ToList();         // 独立PDF: 按源目录结构输出的相对子目录
-            var result = BatchRunner.Run(opt, inputs, onFile, Log, token, refNames, scales, relDirs);
+            // 逐文件覆盖项: 参照名 / 比例 / 打印样式 / 独立 PDF 的相对子目录 (空 = 用全局)
+            var overrides = items.Select(i => new FileOverrides
+            {
+                RefName = i.RefName, Scale = i.Scale, PlotStyle = i.PlotStyle, RelDir = i.Rel
+            }).ToList();
+            var result = BatchRunner.Run(opt, inputs, onFile, Log, token, overrides);
 
             if (result.MergedPath != null)
             {
@@ -594,6 +734,7 @@ namespace DwgBatchPlotTool
                 { "orientation", 0 }, { "mode", 0 },
                 { "center", false }, { "fit", false }, { "mono", false }, { "plotstyles", true },
                 { "hidden", false },
+                { "colWidths", "" },   // 文件列表手工调过的列宽 (逗号分隔的 px), 空 = 用 CSS 默认
                 { "theme", _sysTheme }
             };
         }
@@ -623,9 +764,9 @@ namespace DwgBatchPlotTool
             foreach (var k in _settings.Map.Keys)
                 if (d.ContainsKey(k) && (!string.IsNullOrEmpty(_settings.Map[k]) || EmptyOkKeys.Contains(k)))
                     d[k] = _settings.Map[k];   // 空值一般当没设置, 走默认值; 但这几个键的空值本身有意义
-            // 路径类: 存的值已经不存在(程序挪了位置/文件被删)时回落默认值
-            string ctb = d["ctb"] as string;
-            if (!string.IsNullOrEmpty(ctb) && !File.Exists(ctb)) d["ctb"] = DefaultOptions()["ctb"];
+            // 打印样式与逐文件列走同一套规则: 用户选的路径失效时先保留原值 (下拉里标「找不到」),
+            // 出图时由 StartBatch 用 BatchRunner.ResolvePlotStyle 回退默认样式并写日志, 不静默丢弃选择。
+            // 默认值本来就不落盘 (SaveOptions), 程序挪位置后会自动跟着新目录走。
             string fonts = d["fontsDir"] as string;
             if (!string.IsNullOrEmpty(fonts) && !Directory.Exists(fonts)) d["fontsDir"] = DefaultOptions()["fontsDir"];
             return d;
@@ -634,8 +775,9 @@ namespace DwgBatchPlotTool
         // 路径类参数: 默认值跟着程序目录走, 用户改了别的值才保存
         private static readonly HashSet<string> PathKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "ctb", "outputDir", "fontsDir" };
 
-        // 这些键允许存空值: 参照名留空 = 整张图, 比例留空 = 按图框
-        private static readonly HashSet<string> EmptyOkKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "refName", "scale" };
+        // 这些键允许存空值: 参照名留空 = 整张图, 比例留空 = 按图框, ctb 留空 = 不指定样式表,
+        // colWidths 留空 = 恢复默认列宽 (双击表头边界时要把存过的宽度清掉)
+        private static readonly HashSet<string> EmptyOkKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "refName", "scale", "ctb", "colWidths" };
 
         private void SaveSettingsCore(Dictionary<string, object> body)
         {
@@ -668,6 +810,7 @@ namespace DwgBatchPlotTool
                 _settings.Set(k, s);
             }
             _settings.Save();
+            InvalidatePlotStyles();   // 全局 CTB 可能变了, 下拉候选要重扫
         }
 
         private static PlotOptions ToOptions(Dictionary<string, object> d)
@@ -921,7 +1064,7 @@ namespace DwgBatchPlotTool
             return Invoke(delegate
             {
                 EnsureOwner();
-                using (var dlg = new OpenFileDialog { Filter = "打印样式表 (*.ctb)|*.ctb|所有文件 (*.*)|*.*" })
+                using (var dlg = new OpenFileDialog { Filter = "打印样式表 (*.ctb;*.stb)|*.ctb;*.stb|CTB (*.ctb)|*.ctb|STB (*.stb)|*.stb|所有文件 (*.*)|*.*" })
                     return dlg.ShowDialog(_owner) == DialogResult.OK ? dlg.FileName : null;
             }) as string;
         }
@@ -932,3 +1075,5 @@ namespace DwgBatchPlotTool
         }
     }
 }
+
+// 本程序开源免费使用，严禁转卖，否则生儿子没屁眼。

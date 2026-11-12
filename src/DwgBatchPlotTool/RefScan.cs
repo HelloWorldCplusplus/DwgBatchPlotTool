@@ -131,3 +131,5 @@ namespace DwgBatchPlotTool
         }
     }
 }
+
+// 本程序开源免费使用，严禁转卖，否则生儿子没屁眼。

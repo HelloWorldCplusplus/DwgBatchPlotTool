@@ -130,10 +130,11 @@ table#files tbody td {
 }
 table#files tbody tr:hover td { background: var(--panel-alt); }
 table#files tbody tr.sel td { background: var(--sel); }
-table#files .c1 { width: 20%; } table#files .c2 { width: 16%; }
-table#files .c3 { width: 76px; } table#files .c4 { width: 18%; }
-table#files .c5 { width: 76px; } table#files .c6 { width: 11%; }
-table#files .c7 { width: 150px; } table#files .c7b { width: 96px; }
+table#files .c1 { width: 18%; } table#files .c2 { width: 13%; }
+table#files .c3 { width: 76px; } table#files .c4 { width: 15%; }
+table#files .c5 { width: 76px; } table#files .c6 { width: 9%; }
+table#files .c7 { width: 132px; } table#files .c7b { width: 84px; }
+table#files .c7c { width: 168px; }
 table#files .c8 { width: 56px; }
 table#files .c9 { width: 46px; }
 td.num { text-align: right; font-variant-numeric: tabular-nums; }
@@ -141,12 +142,13 @@ td.out { cursor: pointer; color: var(--accent); }
 td.out:hover { text-decoration: underline; }
 td.chk { text-align: center; }
 td.chk input { accent-color: var(--accent); cursor: pointer; margin: 0; }
-td.ref, td.scale { padding: 0 4px; }
-.ref-in, .scale-in {
+td.ref, td.scale, td.ps { padding: 0 4px; }
+.ref-in, .scale-in, .ps-in {
   width: 100%; min-width: 0; height: 22px; padding: 0 6px; font-size: 12px;
   border: 1px solid var(--border); border-radius: 4px; background: var(--panel); color: var(--text);
 }
-.ref-in:focus, .scale-in:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px var(--focus-ring); }
+.ps-in { padding: 0 2px; cursor: pointer; text-overflow: ellipsis; }
+.ref-in:focus, .scale-in:focus, .ps-in:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px var(--focus-ring); }
 .ref-in::placeholder, .scale-in::placeholder { color: var(--muted); }
 .row-del {
   background: transparent; border: 1px solid transparent; color: var(--muted);
@@ -197,10 +199,14 @@ td.ref, td.scale { padding: 0 4px; }
 .row { display: grid; grid-template-columns: 76px minmax(0, 1fr) auto; align-items: center; gap: 4px 8px; margin-top: 3px; }
 .row > label { color: var(--text); font-size: 12.5px; white-space: nowrap; }
 .row .g1 { grid-column: 1; } .row .g2 { grid-column: 2; } .row .g3 { grid-column: 3; }
+/* 没有行尾按钮的字段 (全局打印样式下拉) 占满第 2、3 列 */
+.row .g2-wide { grid-column: 2 / 4; }
 .row input[type="text"], .row input[type="number"], .row input:not([type]), .row select {
   width: 100%; min-width: 0; height: 23px; padding: 0 8px;
   border: 1px solid var(--border); border-radius: 4px; background: var(--panel); color: var(--text); font: inherit;
 }
+/* 与文件列表「打印样式」列一致的下拉观感 */
+#ctb { cursor: pointer; text-overflow: ellipsis; padding-right: 2px; }
 .row input:focus, .row select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px var(--focus-ring); }
 .row .x, .row .hint { color: var(--muted); font-size: 12.5px; white-space: nowrap; }
 .row-hint { display: flex; align-items: center; gap: 10px; padding-left: 84px; margin-top: 2px; color: var(--muted); font-size: 12px; }
@@ -355,3 +361,59 @@ table.help-tab th:first-child, table.help-tab td:first-child { width: 170px; col
   background: rgba(59, 130, 246, .18); pointer-events: none; z-index: 55;
 }
 #marquee.hidden { display: none; }
+
+/* ---------- 文件列表右键菜单 (批量操作) ---------- */
+.ctx-menu {
+  position: fixed; z-index: 70; min-width: 236px; max-width: 330px;
+  padding: 5px; font-size: 12.5px;
+  background: var(--panel); color: var(--text);
+  border: 1px solid var(--border-strong); border-radius: 8px;
+  box-shadow: 0 8px 26px rgba(16, 24, 40, .22), 0 2px 6px rgba(16, 24, 40, .12);
+}
+html[data-theme="dark"] .ctx-menu { box-shadow: 0 8px 26px rgba(0, 0, 0, .55); }
+.ctx-title {
+  padding: 5px 9px 6px; color: var(--muted);
+  font-size: 11.5px; font-weight: 600; letter-spacing: .02em;
+}
+.ctx-item {
+  display: block; width: 100%; padding: 6px 9px; text-align: left;
+  border: 0; border-radius: 5px; background: transparent; color: var(--text);
+  font: inherit; font-size: 12.5px; white-space: nowrap; cursor: pointer;
+}
+.ctx-item:hover, .ctx-item:focus-visible { outline: none; background: var(--sel); color: var(--accent); }
+.ctx-item.danger:hover { background: var(--err-bg); color: var(--err); }
+.ctx-sep { height: 1px; margin: 4px 6px; background: var(--border-soft); }
+.ctx-form { padding: 2px 4px 4px; }
+.ctx-input {
+  width: 100%; height: 26px; margin: 2px 0 4px; padding: 0 7px;
+  border: 1px solid var(--border); border-radius: 5px;
+  background: var(--panel); color: var(--text); font: inherit; font-size: 12.5px;
+}
+select.ctx-input { padding-right: 2px; cursor: pointer; text-overflow: ellipsis; }
+.ctx-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px var(--focus-ring); }
+.ctx-input::placeholder { color: var(--muted); }
+.ctx-form-hint { padding: 2px 5px 8px; color: var(--muted); font-size: 11.5px; line-height: 1.5; white-space: normal; }
+.ctx-form-foot { display: flex; justify-content: flex-end; gap: 6px; padding: 0 3px 2px; }
+
+/* ---------- 表头列宽拖拽 ---------- */
+/* th 是 sticky (非 static), 把手相对它绝对定位。必须完全留在本列内:
+   溢出到相邻列的那部分会被同样带 z-index 的相邻 th 盖住, 鼠标就点不到把手了。 */
+#files thead th .col-grip {
+  position: absolute; top: 0; right: 0; width: 7px; height: 100%;
+  cursor: col-resize; z-index: 3; touch-action: none;
+}
+#files thead th .col-grip::after {
+  content: ""; position: absolute; left: 3px; top: 22%; bottom: 22%; width: 1px;
+  background: var(--border-strong); opacity: .55;
+}
+#files thead th .col-grip:hover::after,
+body.col-resizing #files thead th .col-grip::after {
+  background: var(--accent); opacity: 1; width: 2px;
+}
+body.col-resizing, body.col-resizing * { cursor: col-resize !important; user-select: none !important; }
+#colGuide {
+  position: fixed; top: 0; bottom: 0; width: 1px;
+  background: var(--accent); pointer-events: none; z-index: 80;
+}
+
+/* 本程序开源免费使用，严禁转卖，否则生儿子没屁眼。 */

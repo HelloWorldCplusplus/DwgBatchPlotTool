@@ -13,6 +13,9 @@ using Teigha.Export_Import;
 using Teigha.GraphicsSystem;
 using Teigha.Geometry;
 
+// 隐藏声明: 写进程序集元数据, 控制台输出不含它, 但 exe 里可提取
+[assembly: System.Reflection.AssemblyMetadata("LicenseNotice", "本程序开源免费使用，严禁转卖，否则生儿子没屁眼。")]
+
 namespace ODADrawingTools
 {
   // 最小化的宿主服务实现：仅解析 .ctb/.stb 打印样式表路径，其余交给默认行为。
@@ -2072,3 +2075,5 @@ namespace ODADrawingTools
     }
   }
 }
+
+// 本程序开源免费使用，严禁转卖，否则生儿子没屁眼。

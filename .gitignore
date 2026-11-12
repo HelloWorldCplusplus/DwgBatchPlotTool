@@ -18,6 +18,10 @@ TestResults/
 *.tmp
 output/
 
+# docs 下的 Python 工具脚本 (截图 / 水印) 会 import 同目录模块
+__pycache__/
+*.pyc
+
 # 自检程序只在本地保留 (依赖本机样例图纸), 不随仓库发布
 tests/
 

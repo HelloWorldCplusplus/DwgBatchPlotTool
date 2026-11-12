@@ -27,11 +27,24 @@ namespace DwgBatchPlotTool
         public string Error;
     }
 
+    /// <summary>
+    /// 单个文件对全局参数的覆盖, 与 inputs 一一对应。
+    /// 每个字段留空 = 这一项沿用全局值; 以后列表里再加覆盖列, 只加字段即可, 不用再改 Run 的签名。
+    /// </summary>
+    internal sealed class FileOverrides
+    {
+        public string RefName = "";     // 参照名
+        public string Scale = "";       // 打印比例
+        public string PlotStyle = "";   // 打印样式表 (.ctb/.stb) 的路径或文件名
+        public string RelDir = "";      // 独立 PDF 输出时, 按源目录结构建的相对子目录
+    }
+
     /// <summary>批量转换核心: 每个文件一个子进程, 单个文件失败不影响其它文件。</summary>
     internal static class BatchRunner
     {
-        /// <summary>refNames/scales/relDirs 与 inputs 一一对应: 单文件指定的参照名/比例, 独立PDF 时的相对子目录 (空 = 平铺); 为空则用 opt 里的全局值。</summary>
-        public static BatchResult Run(PlotOptions opt, IList<string> inputs, Action<FileResult> onFile, Action<string> log, CancellationToken token, IList<string> refNames = null, IList<string> scales = null, IList<string> relDirs = null)
+        /// <summary>overrides 与 inputs 一一对应 (可为 null / 比 inputs 短): 逐文件覆盖参照名、比例、打印样式, 以及独立 PDF 的相对子目录。</summary>
+        public static BatchResult Run(PlotOptions opt, IList<string> inputs, Action<FileResult> onFile,
+            Action<string> log, CancellationToken token, IList<FileOverrides> overrides = null)
         {
             var r = new BatchResult();
             string tempDir = null;
@@ -50,6 +63,7 @@ namespace DwgBatchPlotTool
                 {
                     if (token.IsCancellationRequested) break;
                     string input = inputs[i];
+                    var ov = (overrides != null && i < overrides.Count) ? overrides[i] : null;
                     string outPdf;
                     if (opt.Mode == OutputMode.Merged)
                     {
@@ -58,7 +72,7 @@ namespace DwgBatchPlotTool
                     else
                     {
                         string baseName = Path.GetFileNameWithoutExtension(input);
-                        string sub = (relDirs != null && i < relDirs.Count) ? (relDirs[i] ?? "").Trim() : "";
+                        string sub = ov != null ? (ov.RelDir ?? "").Trim() : "";
                         string dir = sub.Length > 0 ? Path.Combine(opt.OutputDir, sub) : opt.OutputDir;
                         Directory.CreateDirectory(dir);
                         string name = baseName + ".pdf";
@@ -68,16 +82,8 @@ namespace DwgBatchPlotTool
                     }
 
                     var sw = Stopwatch.StartNew();
-                    // 单个文件指定的参照名/比例优先, 没指定就用全局的
-                    var o = opt;
-                    string refN = (refNames != null && i < refNames.Count) ? refNames[i] : null;
-                    string sc = (scales != null && i < scales.Count) ? scales[i] : null;
-                    if (!string.IsNullOrWhiteSpace(refN) || !string.IsNullOrWhiteSpace(sc))
-                    {
-                        o = opt.Clone();
-                        if (!string.IsNullOrWhiteSpace(refN)) o.RefName = refN.Trim();
-                        if (!string.IsNullOrWhiteSpace(sc)) o.Scale = sc.Trim();
-                    }
+                    // 单个文件指定的参照名/比例/打印样式优先, 没指定就用全局的
+                    var o = ApplyOverrides(opt, ov, input, log);
                     var res = OdaRunner.Run(o.BuildPlotArgs(input, outPdf), opt.TimeoutSec, token);
                     sw.Stop();
 
@@ -140,6 +146,76 @@ namespace DwgBatchPlotTool
             return r;
         }
 
+        /// <summary>
+        /// 把单文件覆盖项应用到全局参数。没有任何覆盖时直接返回全局对象 (不复制)。
+        /// 打印样式找不到时回退全局样式, 并在日志里写明; 找到时强制打开 --plot-styles,
+        /// 否则即使传了 --ctb, 引擎也会因为「不按样式打印」而忽略样式表。
+        /// </summary>
+        internal static PlotOptions ApplyOverrides(PlotOptions opt, FileOverrides ov, string input, Action<string> log)
+        {
+            if (ov == null || opt == null) return opt;
+            string refN = (ov.RefName ?? "").Trim();
+            string sc = (ov.Scale ?? "").Trim();
+            string ps = (ov.PlotStyle ?? "").Trim();
+            if (refN.Length == 0 && sc.Length == 0 && ps.Length == 0) return opt;
+
+            var o = opt.Clone();
+            if (refN.Length > 0) o.RefName = refN;
+            if (sc.Length > 0) o.Scale = sc;
+            if (ps.Length > 0)
+            {
+                bool fallback;
+                string ctb = ResolvePlotStyle(ps, opt.CtbFile, input, out fallback);
+                if (fallback)
+                {
+                    // 完全沿用全局 (包括「不按样式打印」), 不因为一次失败的选择把样式打印打开
+                    Log(log, "WARN: " + Path.GetFileName(input ?? "") + " 的打印样式 \"" + ps + "\" 找不到, 已回退全局打印样式");
+                }
+                else if (ctb.Length > 0)
+                {
+                    o.CtbFile = ctb;
+                    o.PlotStyles = true;
+                }
+            }
+            return o;
+        }
+
+        /// <summary>
+        /// 解析单文件打印样式: 不选 (空) 或最终找不到文件 -> 用全局打印样式。
+        /// 相对名的查找顺序: 程序 PlotStyles\ -> 全局样式所在目录 -> 图纸所在目录。
+        /// fallback=true 表示「选了但没找到」, 供调用方记日志; 空选择不算回退。
+        /// </summary>
+        public static string ResolvePlotStyle(string chosen, string globalCtb, string drawing, out bool fallback)
+        {
+            fallback = false;
+            string global = (globalCtb ?? "").Trim();
+            chosen = (chosen ?? "").Trim();
+            if (chosen.Length == 0) return global;
+
+            var tried = new List<string>();
+            if (Path.IsPathRooted(chosen)) tried.Add(chosen);
+            else
+            {
+                tried.Add(Path.Combine(OdaRunner.PlotStylesDir, chosen));
+                string gd = global.Length > 0 ? SafeDir(global) : null;
+                if (!string.IsNullOrEmpty(gd)) tried.Add(Path.Combine(gd, chosen));
+                string dd = SafeDir(drawing);
+                if (!string.IsNullOrEmpty(dd)) tried.Add(Path.Combine(dd, chosen));
+            }
+            foreach (var p in tried)
+            {
+                try { if (File.Exists(p)) return Path.GetFullPath(p); } catch { }
+            }
+            fallback = true;
+            return global;
+        }
+
+        private static string SafeDir(string file)
+        {
+            try { return string.IsNullOrEmpty(file) ? null : Path.GetDirectoryName(Path.GetFullPath(file)); }
+            catch { return null; }
+        }
+
         public static string SafeName(string n)
         {
             var s = string.IsNullOrWhiteSpace(n) ? "合并输出" : n.Trim();
@@ -153,3 +229,5 @@ namespace DwgBatchPlotTool
         }
     }
 }
+
+// 本程序开源免费使用，严禁转卖，否则生儿子没屁眼。
